@@ -1,20 +1,17 @@
 import React, { useState, useEffect, useRef }from 'react';
 import { 
   ColorPicker, 
-  Paper, 
-  Stack, 
+  Paper,
   Text, 
-  Box, 
   TextInput, 
   Button, 
   Radio,
-  Modal,
   Center,
   Grid,
   Textarea } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, addDoc, docRef, doc, setDoc, Timestamp } from 'firebase/firestore';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -29,7 +26,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 function Canvas() {
-
 
   function submitHandler(values){
     // get the image saved in ref & timestamp
