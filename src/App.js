@@ -33,7 +33,6 @@ function App() {
         <Route path="/Canvas" element={<Canvas/>}/>
       </Routes>
       </Container> */}
-      
       <Map/>
     </AppShell>
   );

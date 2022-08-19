@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef }from 'react';
 import { 
-  ColorPicker, 
+  ColorInput, 
   Paper,
   Text, 
   TextInput, 
@@ -42,7 +42,7 @@ function Canvas() {
       const key = x + "." + y;
       await setDoc(doc(db,"map",key),toSubmit);
     }
-    setInMap(0,1);
+    setInMap(8,8);
     // first, try to read from square that is being written to
     
     // if there is square, check time since last written, if >5 minutes override
@@ -81,7 +81,7 @@ function Canvas() {
   const [lineWidth,setLineWidth] = useState(5)
   const [opened, setOpened] = useState(false);
   const [isDrawing,setIsDrawing] = useState(false);
-  const [color,setColor] = useState('rgba(222, 0, 0, 0.5)');
+  const [color,setColor] = useState('rgb(222, 0, 0)');
 
   function clearCanvas(){
     console.log('clicked');
@@ -152,9 +152,9 @@ function Canvas() {
                 onMouseLeave={endDrawing}
                 ref = {canvasRef} 
               />
-              <Center>
-                <Text>select line color </Text>
-                <ColorPicker mt="md" format="rgba" value={color} onChange={setColor} />
+              <Center >
+                <Text>select line color: </Text>
+                <ColorInput format="rgb" value={color} onChange={setColor} />
                 <Button
                   m="md"
                   variant='gradient'
