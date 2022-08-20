@@ -8,10 +8,12 @@ import {
   Radio,
   Center,
   Grid,
-  Textarea } from '@mantine/core';
+  Textarea, 
+  Popover,
+  SimpleGrid} from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -26,12 +28,21 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 function Canvas() {
-
+  const placeholder_item = {
+    description:'',
+    imagePNG:'',
+    artName:'',
+    displayName:''
+}
+  const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
+  
   const form = useForm({
     initialValues: {
       displayName: '',
       artName: '',
       description: '',
+      x:-1,
+      y:-1,
     },
   });
 
@@ -40,7 +51,31 @@ function Canvas() {
   const [lineWidth,setLineWidth] = useState(5);
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
-  // const currentCoords = useContext(CoordsContext);
+  const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
+  const [itemList,setItemList] = useState([]);
+
+  const clickHandler = (event) =>{
+    const coords = event.currentTarget.value;
+    const x = coords[0];
+    const y = coords[1];
+    setCurrentCoords({x,y})
+  }
+
+  function createMapButton(row_idx,col_idx,cell) {
+    let coords = '' + row_idx + col_idx;
+    let obj = {
+        coords: coords,
+        color: cell.displayName ? "red" : "blue",
+    }
+    return (<Button
+        size='xs'
+        color={obj.color}
+        key={obj.coords}
+        value={coords}
+        onClick={clickHandler}
+        variant="filled">
+    </Button>)
+  }
 
   function submitHandler(values){
     // get the image saved in ref & timestamp
@@ -94,7 +129,41 @@ function Canvas() {
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
   }
+  // set up onSnapshot for the grid
+  useEffect(()=>{
+    let unsubscribe;
+    async function getMap(db){
+        // set up the listener
+        unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
 
+            querySnapshot.docChanges().forEach((change)=>{
+
+              const x = change.doc.id[0];
+              const y = change.doc.id[2];
+              if (change.doc.data().displayName){
+
+                map_array[x][y] = change.doc.data();
+                console.log(x,y," added item @ map array data:",map_array[x][y]);
+                createMapButton(x,y,change.doc.data());
+              }
+            })
+        });
+        // start the initial item list
+        let dropdown;
+        dropdown = map_array.map((rows,row_idx)=>{
+            let tmp = [];
+            rows.map((cell,col_idx)=>{
+                tmp.push(createMapButton(row_idx,col_idx,cell));
+            })
+            return tmp;
+        })
+        setDropdown(dropdown);
+    };
+    getMap(db);
+    return () => unsubscribe();
+  },[])
+
+  // set up the canvas
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
     const canvas = canvasRef.current;
@@ -113,6 +182,7 @@ function Canvas() {
 
   },[])
 
+  // when color or linewidth changes
   useEffect(() =>{
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
@@ -121,6 +191,7 @@ function Canvas() {
     context.strokeStyle = color;
   },[color,lineWidth])
 
+  // drawing functions
   const startDrawing = ({nativeEvent}) =>{
     const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
     contextRef.current.beginPath();
@@ -156,9 +227,9 @@ function Canvas() {
                 onMouseLeave={endDrawing}
                 ref = {canvasRef} 
               />
-              <Center >
-                <Text>select line color: </Text>
-                <ColorInput format="rgb" value={color} onChange={setColor} />
+              <Center>
+                <Text weight={500}>select line color: </Text>
+                <ColorInput ml="sm" format="rgb" value={color} onChange={setColor} />
                 <Button
                   m="md"
                   variant='gradient'
@@ -179,7 +250,6 @@ function Canvas() {
                 <Radio value="10" label="large" />
                 <Radio value="15" label="xtra large" />
               </Radio.Group>
-
             </Paper>
           </Center>
       </Grid.Col>
@@ -207,15 +277,24 @@ function Canvas() {
               placeholder="leave a note here!"
               {...form.getInputProps('description', { type: 'Textarea' })}
             />
+            <Popover width={400} trapFocus position="right">
+              <Popover.Target>
+                <Button>select coordinates</Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <SimpleGrid cols={10}>
+                  {dropdown}
+                </SimpleGrid>
+              </Popover.Dropdown>
+            </Popover>
             <Button
               type="submit"
             >
-              Submit
+              submit your art
             </Button>
           </form>
         </Paper>
-      </Grid.Col>
-
+      </Grid.Col> 
     </Grid>
 
     </>

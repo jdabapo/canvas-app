@@ -26,6 +26,8 @@ const db = getFirestore(app);
 
 function Map(){
     // array should be 10x10 (0-9)
+
+    // used to create a button or update a button on the map
     function createMapButton(row_idx,col_idx,cell) {
         let coords = '' + row_idx + col_idx;
         let obj = {
@@ -62,6 +64,7 @@ function Map(){
         setCurrentItem(map_array[x][y]);
     }
 
+    // whenever a different is clicked
     useEffect(()=>{
         // pass the currentItem props to the thing
         let noitem = "https://media.istockphoto.com/photos/empty-pedestal-inside-exhibition-gallery-picture-id1271894342?k=20&m=1271894342&s=170667a&w=0&h=4Cy45Werofk-XvvjgxU_dYgoQgXRawE_TEEn3BsVbx0=";
