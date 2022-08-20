@@ -12,7 +12,6 @@ import { SimpleGrid,
         } from '@mantine/core';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, docRef, query, onSnapshot } from 'firebase/firestore';
-import { toContainElement } from '@testing-library/jest-dom/dist/matchers';
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
   authDomain: "sanvas-5ba8d.firebaseapp.com",
@@ -107,7 +106,7 @@ function Map(){
                             </Button>
                             :
                             <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
-                                select a box
+                                select a red box to show an image!
                             </Button>
                             }
                         </Card>);
@@ -121,6 +120,22 @@ function Map(){
             // set up the listener
             unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
                 querySnapshot.docChanges().forEach((change)=>{
+                    if (change.type === "modified") {
+                        const x = change.doc.id[0];
+                        const y = change.doc.id[2];
+                        // update the item list at that coordinate
+                        if (change.doc.data().displayName){
+                            map_array[x][y] = change.doc.data();
+                            console.log(x,y," added item @ map array data:",map_array[x][y]);
+                            createMapButton(x,y,change.doc.data());
+                            if (currentCoords.x === x && currentCoords.y === y){
+                                // TODO: add something here to make like transition?
+                                // maybe keep a small log of last X pictures?
+                                // update current item
+                                setCurrentItem(map_array[x][y]);
+                            }
+                        }
+                    }
                     if (change.type === "added") {
                         const x = change.doc.id[0];
                         const y = change.doc.id[2];
@@ -129,6 +144,12 @@ function Map(){
                             map_array[x][y] = change.doc.data();
                             console.log(x,y," added item @ map array data:",map_array[x][y]);
                             createMapButton(x,y,change.doc.data());
+                            if (currentCoords.x === x && currentCoords.y === y){
+                                // TODO: add something here to make like transition?
+                                // maybe keep a small log of last X pictures?
+                                // update current item
+                                setCurrentItem(map_array[x][y]);
+                            }
                         }
                     }
                 });

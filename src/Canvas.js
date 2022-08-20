@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef }from 'react';
+import React, { useState, useEffect, useRef, useContext }from 'react';
 import { 
   ColorInput, 
   Paper,
@@ -11,7 +11,7 @@ import {
   Textarea } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -27,6 +27,21 @@ const db = getFirestore(app);
 
 function Canvas() {
 
+  const form = useForm({
+    initialValues: {
+      displayName: '',
+      artName: '',
+      description: '',
+    },
+  });
+
+  const canvasRef = useRef(null);
+  const contextRef = useRef(null);
+  const [lineWidth,setLineWidth] = useState(5);
+  const [isDrawing,setIsDrawing] = useState(false);
+  const [color,setColor] = useState('rgb(222, 0, 0)');
+  // const currentCoords = useContext(CoordsContext);
+
   function submitHandler(values){
     // get the image saved in ref & timestamp
     const tmp = canvasRef.current.toDataURL('image/png',0.3);
@@ -40,9 +55,14 @@ function Canvas() {
     console.log(toSubmit);
     async function setInMap(x,y){
       const key = x + "." + y;
+      // get the doc, see if there is a exists
+      const docRef = await getDoc(db,"map",key);
+      if (docRef.exists()){
+        console.log('changing this doc');
+      }
       await setDoc(doc(db,"map",key),toSubmit);
     }
-    setInMap(8,8);
+    setInMap(0,0);
     // first, try to read from square that is being written to
     
     // if there is square, check time since last written, if >5 minutes override
@@ -68,28 +88,12 @@ function Canvas() {
     };
   }
 
-  const form = useForm({
-    initialValues: {
-      displayName: '',
-      artName: '',
-      description: '',
-    },
-  });
-
-  const canvasRef = useRef(null);
-  const contextRef = useRef(null);
-  const [lineWidth,setLineWidth] = useState(5)
-  const [opened, setOpened] = useState(false);
-  const [isDrawing,setIsDrawing] = useState(false);
-  const [color,setColor] = useState('rgb(222, 0, 0)');
-
   function clearCanvas(){
     console.log('clicked');
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
   }
-  
 
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
