@@ -34,6 +34,7 @@ function App() {
       </Routes>
       </Container> */}
       <Canvas/>
+      <Map/>
     </AppShell>
   );
 }

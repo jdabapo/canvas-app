@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext }from 'react';
+import React, { useState, useEffect, useRef }from 'react';
 import { 
   ColorInput, 
   Paper,
@@ -10,10 +10,14 @@ import {
   Grid,
   Textarea, 
   Popover,
-  SimpleGrid} from '@mantine/core';
+  SimpleGrid,
+  Stack,
+  } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { showNotification, updateNotification } from '@mantine/notifications';
+import { IconCheck } from '@tabler/icons';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -32,7 +36,8 @@ function Canvas() {
     description:'',
     imagePNG:'',
     artName:'',
-    displayName:''
+    displayName:'',
+    timeEpoch:''
 }
   const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
   
@@ -45,40 +50,81 @@ function Canvas() {
       y:-1,
     },
   });
-
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const [lineWidth,setLineWidth] = useState(5);
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
-  const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
-  const [itemList,setItemList] = useState([]);
+  const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
+  const [dropdown,setDropdown] = useState([]);
 
-  const clickHandler = (event) =>{
+  const clickHandler = (event) => {
     const coords = event.currentTarget.value;
-    const x = coords[0];
-    const y = coords[1];
-    setCurrentCoords({x,y})
+    const tmp = {x:coords[0],y:coords[1]};
+    setCurrentCoords(tmp);
   }
 
   function createMapButton(row_idx,col_idx,cell) {
     let coords = '' + row_idx + col_idx;
-    let obj = {
-        coords: coords,
-        color: cell.displayName ? "red" : "blue",
+    // TODO: find out how to change color of button
+    return (
+      <Button
+          size='xs'
+          color="blue"
+          key={coords}
+          value={coords}
+          onClick={clickHandler}
+          variant="filled">
+      </Button>
+    )
+  }
+
+  async function submitToDB(x,y,toSubmit){
+    const key = x + "." + y;
+    const docRef = doc(db,"map",key);
+    const docSnap = await getDoc(docRef);
+    // see if doc exists @ that x,y
+    if(docSnap.exists()){
+      const docData = docSnap.data();
+      // TODO: look at this https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
+      // if doc has an array, update it
+      if (docData.priorImages){
+        // if goes to 10, need to replace it so only 10 datapoints exist
+        if (docData.priorImages.length === 10){
+          console.log('rmeoving oldest');
+          await updateDoc(docRef,{
+            priorImages:arrayRemove(docData.priorImages[0])
+          })
+        }
+        delete docData.priorImages;
+        await updateDoc(docRef,{
+          priorImages:arrayUnion(docData)
+        });
+        // if not, just add onto back of array
+      }
+      else{
+        await updateDoc(docRef,{
+          priorImages:[]
+        });
+      }
+      await updateDoc(docRef,{
+        artName: toSubmit.artName,
+        description: toSubmit.description,
+        displayName: toSubmit.displayName,
+        imagePNG: toSubmit.imagePNG,
+
+      });
     }
-    return (<Button
-        size='xs'
-        color={obj.color}
-        key={obj.coords}
-        value={coords}
-        onClick={clickHandler}
-        variant="filled">
-    </Button>)
+    else{
+      // if no images there, add a new field
+      let tmp = toSubmit;
+      console.log(tmp);
+      await setDoc(docRef,toSubmit);
+    }
   }
 
   function submitHandler(values){
-    // get the image saved in ref & timestamp
+    // get the image saved in ref & timeEpoch
     const tmp = canvasRef.current.toDataURL('image/png',0.3);
     const toSubmit = {
       artName:values.artName,
@@ -87,27 +133,28 @@ function Canvas() {
       timeEpoch:Date.now(),
       imagePNG:tmp,
     };
-    console.log(toSubmit);
-    async function setInMap(x,y){
-      const key = x + "." + y;
-      // get the doc, see if there is a exists
-      const docRef = await getDoc(db,"map",key);
-      if (docRef.exists()){
-        console.log('changing this doc');
-      }
-      await setDoc(doc(db,"map",key),toSubmit);
-    }
-    setInMap(0,0);
-    // first, try to read from square that is being written to
-    
-    // if there is square, check time since last written, if >5 minutes override
+    showNotification({
+      id: 'load-data',
+      loading: true,
+      title: 'uploading your art...',
+      message: 'you cannot close this yet, please wait for your data to send!',
+      autoClose: false,
+      disallowClose: true,
+    });
+    submitToDB(currentCoords.x,currentCoords.y,toSubmit).then(
+      setTimeout(() => {
+        updateNotification({
+          id: 'load-data',
+          color: 'teal',
+          title: 'data successfully uploaded!',
+          message: `go to the map coordinates (${currentCoords.x},${currentCoords.y}) to view your art!`,
+          icon: <IconCheck size={16} />,
+          autoClose: 2500,
+        });
+      }, 1000)
+    );
 
-    // if not, request does not go through, send notification
-    // construct object to send to db
-
     
-    // resize picture, from whatever window height to 100 x 100 px 
-    // resizePicture
   }
 
   function computePointInCanvas(x, y){
@@ -124,7 +171,6 @@ function Canvas() {
   }
 
   function clearCanvas(){
-    console.log('clicked');
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -141,14 +187,15 @@ function Canvas() {
               const x = change.doc.id[0];
               const y = change.doc.id[2];
               if (change.doc.data().displayName){
-
+                // all the filled squares shoud now be red
+                // TODO: find out why its not turning red
                 map_array[x][y] = change.doc.data();
-                console.log(x,y," added item @ map array data:",map_array[x][y]);
                 createMapButton(x,y,change.doc.data());
               }
             })
         });
         // start the initial item list
+        // every button should be blue
         let dropdown;
         dropdown = map_array.map((rows,row_idx)=>{
             let tmp = [];
@@ -219,7 +266,7 @@ function Canvas() {
       {/* Canvas */}
       <Grid.Col span={3}>
           <Center inline>
-            <Paper shadow="xl" radius="md" p="md" withBorder>
+            <Paper shadow="xl" radius="md" p="md" withBorder >
               <canvas
                 onMouseDown={startDrawing}
                 onMouseUp={endDrawing}
@@ -277,26 +324,35 @@ function Canvas() {
               placeholder="leave a note here!"
               {...form.getInputProps('description', { type: 'Textarea' })}
             />
-            <Popover width={400} trapFocus position="right">
-              <Popover.Target>
-                <Button>select coordinates</Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <SimpleGrid cols={10}>
-                  {dropdown}
-                </SimpleGrid>
-              </Popover.Dropdown>
-            </Popover>
-            <Button
-              type="submit"
-            >
-              submit your art
-            </Button>
+            <Text weight={500}>current selected coordinates are x: {currentCoords.x} y: {currentCoords.y}</Text>
+            <br></br>
+            <Stack spacing="sm">
+              {/*TODO: fix this, does not appear on some screens */}
+              <Popover width={400} trapFocus position="bottom">
+                <Popover.Target>
+                  <Button
+                  variant='outline'
+                  gradient={{ from: 'blue', to:'pink', deg:25}}
+                  >select coordinates</Button>
+                </Popover.Target>
+                <Popover.Dropdown>
+                  <SimpleGrid cols={10}>
+                    {dropdown}
+                  </SimpleGrid>
+                </Popover.Dropdown>
+              </Popover>
+              <Button
+                variant='gradient'
+                gradient={{from: 'blue', to:'pink', deg:5}}
+                type="submit"
+              >
+                submit your art
+              </Button>
+            </Stack>
           </form>
         </Paper>
-      </Grid.Col> 
+      </Grid.Col>
     </Grid>
-
     </>
   );
 }
