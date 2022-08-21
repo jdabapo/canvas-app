@@ -48,14 +48,14 @@ function Map(){
         description:'',
         imagePNG:'',
         artName:'',
-        displayName:''
+        displayName:'',
+        timeEpoch:'',
     }
     const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
     const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
     const [itemList,setItemList] = useState([]);
     const [currentItem,setCurrentItem] = useState({});
     const [displayImage,setDisplayImage] = useState(null);
-
     const clickHandler = (event) =>{
         const coords = event.currentTarget.value;
         const x = coords[0];
@@ -72,12 +72,15 @@ function Map(){
             imagePNG:"https://consciouscat.net/wp-content/uploads/2012/11/cat-immune-system-e1587891908928.jpg",
             artName:"cute cat",
             displayName:"jeremy",
-            timestamp:"earlier today",
+            timeEpoch:"earlier today",
             description:"select any box to see art work!"
         };
         let text;
+        let d = null;
         if (currentCoords.x !== -1 && currentCoords.y !== -1 && currentItem.displayName !== ''){
+            d = new Date(0);
             tmp = currentItem;
+            d.setUTCMilliseconds(tmp.timeEpoch);
         }
         text = `${tmp.artName} by ${tmp.displayName}`;
         if (currentItem.displayName === ''){
@@ -97,7 +100,7 @@ function Map(){
                                     {text}
                                 </Text>
                                 <Badge color="pink" variant="light">
-                                {tmp.timestamp}
+                                    {d ? d.toLocaleString(): "no time yet"}
                                 </Badge>
                             </Group>
                             <Text size="sm" color="dimmed">

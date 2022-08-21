@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 import { ModalsProvider } from '@mantine/modals';
 import { initializeApp } from "firebase/app";
+import { NotificationsProvider } from '@mantine/notifications';
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
   authDomain: "sanvas-5ba8d.firebaseapp.com",
@@ -23,7 +24,9 @@ root.render(
     <BrowserRouter>
     <MantineProvider withGlobalStyles withNormalizeCSS>
       <ModalsProvider>
-      <App />
+      <NotificationsProvider>
+        <App/>
+      </NotificationsProvider>
       </ModalsProvider>
     </MantineProvider>
     </BrowserRouter>
