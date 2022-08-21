@@ -132,7 +132,7 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             map_array[x][y] = change.doc.data();
-                            console.log(x,y," added item @ map array data:",map_array[x][y]);
+                            // console.log(x,y," added item @ map array data:",map_array[x][y]);
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
@@ -148,7 +148,7 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             map_array[x][y] = change.doc.data();
-                            console.log(x,y," added item @ map array data:",map_array[x][y]);
+                            // console.log(x,y," added item @ map array data:",map_array[x][y]);
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?

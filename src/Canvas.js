@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext }from 'react';
+import React, { useState, useEffect, useRef }from 'react';
 import { 
   ColorInput, 
   Paper,
@@ -12,12 +12,11 @@ import {
   Popover,
   SimpleGrid,
   Stack,
-  Tooltip} from '@mantine/core';
+  } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
-import { useHover } from '@mantine/hooks';
 import { IconCheck } from '@tabler/icons';
 
 const firebaseConfig = {
@@ -67,10 +66,7 @@ function Canvas() {
 
   function createMapButton(row_idx,col_idx,cell) {
     let coords = '' + row_idx + col_idx;
-    let obj = {
-        coords: coords,
-        color: cell.displayName ? "red" : "blue",
-    }
+    // TODO: find out how to change color of button
     return (
       <Button
           size='xs'
@@ -85,18 +81,46 @@ function Canvas() {
 
   async function submitToDB(x,y,toSubmit){
     const key = x + "." + y;
-    console.log(key);
     const docRef = doc(db,"map",key);
     const docSnap = await getDoc(docRef);
+    // see if doc exists @ that x,y
     if(docSnap.exists()){
-      // modify it
-      docSnap.data();
-      console.log(docSnap.data());
+      const docData = docSnap.data();
+      // TODO: look at this https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
+      // if doc has an array, update it
+      if (docData.priorImages){
+        // if goes to 10, need to replace it so only 10 datapoints exist
+        if (docData.priorImages.length === 10){
+          console.log('rmeoving oldest');
+          await updateDoc(docRef,{
+            priorImages:arrayRemove(docData.priorImages[0])
+          })
+        }
+        delete docData.priorImages;
+        await updateDoc(docRef,{
+          priorImages:arrayUnion(docData)
+        });
+        // if not, just add onto back of array
+      }
+      else{
+        await updateDoc(docRef,{
+          priorImages:[]
+        });
+      }
+      await updateDoc(docRef,{
+        artName: toSubmit.artName,
+        description: toSubmit.description,
+        displayName: toSubmit.displayName,
+        imagePNG: toSubmit.imagePNG,
+
+      });
     }
     else{
-      console.log('empty');
+      // if no images there, add a new field
+      let tmp = toSubmit;
+      console.log(tmp);
+      await setDoc(docRef,toSubmit);
     }
-    await setDoc(doc(db,"map",key),toSubmit).then(console.log('finished'));
   }
 
   function submitHandler(values){
@@ -303,11 +327,12 @@ function Canvas() {
             <Text weight={500}>current selected coordinates are x: {currentCoords.x} y: {currentCoords.y}</Text>
             <br></br>
             <Stack spacing="sm">
-              <Popover width={400} trapFocus position="left">
+              {/*TODO: fix this, does not appear on some screens */}
+              <Popover width={400} trapFocus position="bottom">
                 <Popover.Target>
                   <Button
-                  variant='gradient'
-                  gradient={{ from: 'green', to:'pink', deg:25}}
+                  variant='outline'
+                  gradient={{ from: 'blue', to:'pink', deg:25}}
                   >select coordinates</Button>
                 </Popover.Target>
                 <Popover.Dropdown>
@@ -318,7 +343,7 @@ function Canvas() {
               </Popover>
               <Button
                 variant='gradient'
-                gradient={{from: 'green', to:'pink', deg:5}}
+                gradient={{from: 'blue', to:'pink', deg:5}}
                 type="submit"
               >
                 submit your art
