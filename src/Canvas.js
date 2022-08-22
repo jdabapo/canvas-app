@@ -12,6 +12,8 @@ import {
   Popover,
   SimpleGrid,
   Stack,
+  Dialog,
+  Group
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
@@ -56,6 +58,7 @@ function Canvas() {
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
   const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
+  const [opened,setOpened] = useState(false);
   const [dropdown,setDropdown] = useState([]);
 
   const clickHandler = (event) => {
@@ -328,19 +331,12 @@ function Canvas() {
             <br></br>
             <Stack spacing="sm">
               {/*TODO: fix this, does not appear on some screens */}
-              <Popover width={400} trapFocus position="bottom">
-                <Popover.Target>
-                  <Button
+              <Button
                   variant='outline'
                   gradient={{ from: 'blue', to:'pink', deg:25}}
-                  >select coordinates</Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <SimpleGrid cols={10}>
-                    {dropdown}
-                  </SimpleGrid>
-                </Popover.Dropdown>
-              </Popover>
+                  onClick={() => setOpened((o) => !o)}
+                  >select coordinates
+              </Button>
               <Button
                 variant='gradient'
                 gradient={{from: 'blue', to:'pink', deg:5}}
@@ -353,6 +349,23 @@ function Canvas() {
         </Paper>
       </Grid.Col>
     </Grid>
+    <Dialog
+        opened={opened}
+        size="lg"
+        shadow="xl" p={30} 
+        withCloseButton
+        onClose={() => setOpened(false)}
+        radius="md"
+        position={{ bottom: 20, left: 20 }}
+
+      >
+      <Center>
+      <Text weight={500} mb="sm">select a box to place your art</Text>
+      </Center>
+                  <SimpleGrid cols={10}>
+                    {dropdown}
+                  </SimpleGrid>
+      </Dialog>
     </>
   );
 }
