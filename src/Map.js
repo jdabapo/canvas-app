@@ -8,10 +8,11 @@ import { SimpleGrid,
          Image,
          Text,
          Badge,
-         Center,
+         Center, 
         } from '@mantine/core';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, docRef, query, onSnapshot } from 'firebase/firestore';
+import { Carousel } from '@mantine/carousel';
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
   authDomain: "sanvas-5ba8d.firebaseapp.com",
@@ -24,20 +25,54 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+
+
+function DisplayItem({d, text, tmp, currentCoords}){
+    // change image to the biggest image size
+    return(
+            <Card shadow="sm" p="lg" radius="md" withBorder>
+                            <Card.Section>
+                                <Image
+                                src={tmp.imagePNG}
+                                height="100%"
+                                alt={tmp.artName}
+                                />
+                            </Card.Section>
+                            <Group position="apart" mt="md" mb="xs">
+                                <Text weight={500}>
+                                    {text}
+                                </Text>
+                                <Badge color="pink" variant="light">
+                                    {d ? d.toLocaleString(): "no time yet"}
+                                </Badge>
+                            </Group>
+                            <Text size="sm" color="dimmed">
+                                {tmp.description}
+                            </Text>
+                            {currentCoords.x !== -1 ?
+                            <Button variant="light" color="blue" fullWidth mt="md" radius="md">
+                                item located at x:{currentCoords.x} y:{currentCoords.y}
+                            </Button>
+                            :
+                            <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
+                                select a red box to show an image!
+                            </Button>
+                            }
+                        </Card>
+    );
+}
+
 function Map(){
     // array should be 10x10 (0-9)
 
     // used to create a button or update a button on the map
     function createMapButton(row_idx,col_idx,cell) {
         let coords = '' + row_idx + col_idx;
-        let obj = {
-            coords: coords,
-            color: cell.displayName ? "red" : "blue",
-        }
+        let color = cell.displayName ? "red" : "blue"
         return (<Button
             size='sm'
-            color={obj.color} 
-            key={obj.coords}
+            color={color} 
+            key={coords}
             value={coords}
             onClick={clickHandler}
             variant="filled">
@@ -75,47 +110,48 @@ function Map(){
             timeEpoch:"earlier today",
             description:"select any box to see art work!"
         };
-        let text;
-        let d = null;
-        if (currentCoords.x !== -1 && currentCoords.y !== -1 && currentItem.displayName !== ''){
-            d = new Date(0);
-            tmp = currentItem;
-            d.setUTCMilliseconds(tmp.timeEpoch);
-        }
-        text = `${tmp.artName} by ${tmp.displayName}`;
+        let d;
+        let all_display = [];
         if (currentItem.displayName === ''){
-            text = "nothing is here...";
+            console.log('d')
+            tmp.description = "nothing is here...";
             tmp.imagePNG = noitem;
+            all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
+            setDisplayImage(all_display);
         }
-        setDisplayImage(<Card shadow="sm" p="lg" radius="md" withBorder>
-                            <Card.Section>
-                                <Image
-                                src={tmp.imagePNG}
-                                height="100%"
-                                alt={tmp.artName}
-                                />
-                            </Card.Section>
-                            <Group position="apart" mt="md" mb="xs">
-                                <Text weight={500}>
-                                    {text}
-                                </Text>
-                                <Badge color="pink" variant="light">
-                                    {d ? d.toLocaleString(): "no time yet"}
-                                </Badge>
-                            </Group>
-                            <Text size="sm" color="dimmed">
-                                {tmp.description}
-                            </Text>
-                            {currentCoords.x !== -1 ?
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md">
-                                item located at x:{currentCoords.x} y:{currentCoords.y}
-                            </Button>
-                            :
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
-                                select a red box to show an image!
-                            </Button>
-                            }
-                        </Card>);
+        else if(currentCoords.x === -1 && currentCoords.y === -1){
+            all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
+            setDisplayImage(all_display);
+        }
+        else if (currentItem.priorImages && currentItem.priorImages.length > 0){
+            console.log(currentItem.imagePNG);
+            let image_text;
+            // add all the prior images
+            currentItem.priorImages.map((image)=>{
+                console.log(image.imagePNG);
+                image_text = `${image.artName} by ${image.displayName}`;
+                d = new Date(0);
+                d.setUTCMilliseconds(image.timeEpoch);
+                all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>)
+            });
+            // push current item
+            image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+            d = new Date(0);
+            d.setUTCMilliseconds(currentItem.timeEpoch);
+            all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>);
+            console.log(all_display)
+            setDisplayImage(
+                <Carousel
+                    height={500}
+                >
+                    {all_display}
+                </Carousel>
+                );
+        }
+        else{
+            setDisplayImage(<DisplayItem d="f" text="f" tmp={currentItem} currentCoords={currentCoords}/>);
+        }
+
     },[currentItem,currentCoords])
 
     // initialize the grid
@@ -179,14 +215,15 @@ function Map(){
     return(
         // first make an empty 10x10 grid
         <>
+
+        <Center>
+            <Paper shadow="xs" p="md" withBorder>
+                {displayImage}
+            </Paper>
+        </Center>
         <Grid grow>
 
             <Grid.Col span={6}>
-                <Center inline>
-                    <Paper shadow="xs" p="md" withBorder>
-                        {displayImage}
-                    </Paper>
-                </Center>
             </Grid.Col>
             <Grid.Col span={3} style={{ minWidth: 600 }}>
                 <Center inline>
