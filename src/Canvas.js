@@ -33,6 +33,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// given a set of images, find largest width and height, and draw each of the images onto a canvas with that size.
+function normalizeImages(images){
+
+}
+
 function Canvas() {
   const placeholder_item = {
     description:'',
@@ -94,7 +99,7 @@ function Canvas() {
       if (docData.priorImages){
         // if goes to 10, need to replace it so only 10 datapoints exist
         if (docData.priorImages.length === 10){
-          console.log('rmeoving oldest');
+          console.log('removing oldest');
           await updateDoc(docRef,{
             priorImages:arrayRemove(docData.priorImages[0])
           })
@@ -340,6 +345,7 @@ function Canvas() {
               <Button
                 variant='gradient'
                 gradient={{from: 'blue', to:'pink', deg:5}}
+                onClick={() => setTimeout(setOpened(() => false),250)}
                 type="submit"
               >
                 submit your art
@@ -359,13 +365,16 @@ function Canvas() {
         position={{ bottom: 20, left: 20 }}
 
       >
-      <Center>
-      <Text weight={500} mb="sm">select a box to place your art</Text>
-      </Center>
-                  <SimpleGrid cols={10}>
-                    {dropdown}
-                  </SimpleGrid>
-      </Dialog>
+        <Stack>
+          <Paper align="center">
+            <Text weight={500}>select box to place art</Text>
+            <Text>current selected coordinates are ({currentCoords.x},{currentCoords.y})</Text>
+          </Paper>
+        </Stack>
+        <SimpleGrid cols={10}>
+          {dropdown}
+        </SimpleGrid>
+    </Dialog>
     </>
   );
 }
