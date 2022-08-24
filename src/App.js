@@ -1,7 +1,8 @@
 import { AppShell, Navbar, Header } from '@mantine/core';
 // import { Routes, Route } from 'react-router-dom';
 import Canvas from './Canvas';
-import Map from  './Map'
+import Map from  './Map';
+import Carosel from './Carosel';
 function App() {
   return (
     <AppShell
@@ -33,8 +34,8 @@ function App() {
         <Route path="/Canvas" element={<Canvas/>}/>
       </Routes>
       </Container> */}
-      <Canvas/>
       <Map/>
+      <Carosel/>
     </AppShell>
   );
 }

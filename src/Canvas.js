@@ -12,6 +12,8 @@ import {
   Popover,
   SimpleGrid,
   Stack,
+  Dialog,
+  Group
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { initializeApp } from 'firebase/app';
@@ -30,6 +32,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// given a set of images, find largest width and height, and draw each of the images onto a canvas with that size.
+function normalizeImages(images){
+
+}
 
 function Canvas() {
   const placeholder_item = {
@@ -56,6 +63,7 @@ function Canvas() {
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
   const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
+  const [opened,setOpened] = useState(false);
   const [dropdown,setDropdown] = useState([]);
 
   const clickHandler = (event) => {
@@ -91,7 +99,7 @@ function Canvas() {
       if (docData.priorImages){
         // if goes to 10, need to replace it so only 10 datapoints exist
         if (docData.priorImages.length === 10){
-          console.log('rmeoving oldest');
+          console.log('removing oldest');
           await updateDoc(docRef,{
             priorImages:arrayRemove(docData.priorImages[0])
           })
@@ -328,22 +336,16 @@ function Canvas() {
             <br></br>
             <Stack spacing="sm">
               {/*TODO: fix this, does not appear on some screens */}
-              <Popover width={400} trapFocus position="bottom">
-                <Popover.Target>
-                  <Button
+              <Button
                   variant='outline'
                   gradient={{ from: 'blue', to:'pink', deg:25}}
-                  >select coordinates</Button>
-                </Popover.Target>
-                <Popover.Dropdown>
-                  <SimpleGrid cols={10}>
-                    {dropdown}
-                  </SimpleGrid>
-                </Popover.Dropdown>
-              </Popover>
+                  onClick={() => setOpened((o) => !o)}
+                  >select coordinates
+              </Button>
               <Button
                 variant='gradient'
                 gradient={{from: 'blue', to:'pink', deg:5}}
+                onClick={() => setTimeout(setOpened(() => false),250)}
                 type="submit"
               >
                 submit your art
@@ -353,6 +355,26 @@ function Canvas() {
         </Paper>
       </Grid.Col>
     </Grid>
+    <Dialog
+        opened={opened}
+        size="lg"
+        shadow="xl" p={30} 
+        withCloseButton
+        onClose={() => setOpened(false)}
+        radius="md"
+        position={{ bottom: 20, left: 20 }}
+
+      >
+        <Stack>
+          <Paper align="center">
+            <Text weight={500}>select box to place art</Text>
+            <Text>current selected coordinates are ({currentCoords.x},{currentCoords.y})</Text>
+          </Paper>
+        </Stack>
+        <SimpleGrid cols={10}>
+          {dropdown}
+        </SimpleGrid>
+    </Dialog>
     </>
   );
 }
