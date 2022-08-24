@@ -4,7 +4,6 @@ import './index.css';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter } from 'react-router-dom';
 import { ModalsProvider } from '@mantine/modals';
 import { initializeApp } from "firebase/app";
 import { NotificationsProvider } from '@mantine/notifications';
@@ -21,7 +20,6 @@ const app = initializeApp(firebaseConfig);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
     <MantineProvider withGlobalStyles withNormalizeCSS>
       <ModalsProvider>
       <NotificationsProvider>
@@ -29,7 +27,6 @@ root.render(
       </NotificationsProvider>
       </ModalsProvider>
     </MantineProvider>
-    </BrowserRouter>
   </React.StrictMode>
 );
 
