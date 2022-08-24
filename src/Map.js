@@ -8,11 +8,14 @@ import { SimpleGrid,
          Image,
          Text,
          Badge,
-         Center, 
+         Center,
+         LoadingOverlay, 
         } from '@mantine/core';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, addDoc, docRef, query, onSnapshot } from 'firebase/firestore';
 import { Carousel } from '@mantine/carousel';
+import { IconCheck } from '@tabler/icons';
+import { showNotification, updateNotification } from '@mantine/notifications';
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
   authDomain: "sanvas-5ba8d.firebaseapp.com",
@@ -168,7 +171,12 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             map_array[x][y] = change.doc.data();
-                            // console.log(x,y," added item @ map array data:",map_array[x][y]);
+                            showNotification({
+                                id:'new-item',
+                                loading:false,
+                                title:`${change.doc.data().displayName} added a new image at (${x},${y})`,
+                                autoClose:3600,
+                            })
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
@@ -214,16 +222,13 @@ function Map(){
     // if change in the snapshot, update that button
     return(
         // first make an empty 10x10 grid
-        <>
-
-        <Center>
-            <Paper shadow="xs" p="md" withBorder>
-                {displayImage}
-            </Paper>
-        </Center>
         <Grid grow>
-
             <Grid.Col span={6}>
+                <Center>
+                    <Paper shadow="xs" p="md" withBorder>
+                        {displayImage}
+                    </Paper>
+                </Center>
             </Grid.Col>
             <Grid.Col span={3} style={{ minWidth: 600 }}>
                 <Center inline>
@@ -235,7 +240,6 @@ function Map(){
                 </Center>
             </Grid.Col>
         </Grid>
-        </>
     )
     // read entire table
 }

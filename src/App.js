@@ -1,42 +1,68 @@
-import { AppShell, Navbar, Header } from '@mantine/core';
-// import { Routes, Route } from 'react-router-dom';
+import { useState } from 'react';
+import { 
+        AppShell,
+        Navbar,
+        Header,
+        Text,
+        MediaQuery,
+        Burger,
+        useMantineTheme,
+        Stack
+     } from '@mantine/core';
+import { BrowserRouter, Route, Link, Routes } from 'react-router-dom';
 import Canvas from './Canvas';
 import Map from  './Map';
-import Carosel from './Carosel';
 function App() {
+  const theme = useMantineTheme();
+  const [opened, setOpened] = useState(false);
+  function clickHandler(){
+    console.log('clicked')
+    setOpened(!opened);
+  }
   return (
-    <AppShell
-      padding="md"
-      navbar={<Navbar
-                width={{ 
-                  base: 100,
-                }}
-                height={500}
-                hiddenBreakpoint="sm"
-                hidden="true"
-                p="xs"
-                >
-                  {/* Navbar content */}
-                </Navbar>}
-      header={<Header 
-                height={60} 
-                p="xs"
-                >
-                  {/* Header content */}
-                </Header>
-      }
-      styles={(theme) => ({
-        main: { backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0] },
-      })}
-    >
-      {/* <Container>
-      <Routes>
-        <Route path="/Canvas" element={<Canvas/>}/>
-      </Routes>
-      </Container> */}
-      <Map/>
-      <Carosel/>
-    </AppShell>
+    <BrowserRouter>
+      <AppShell
+        styles={{
+          main: {
+            background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          },
+        }}
+        navbarOffsetBreakpoint="sm"
+        asideOffsetBreakpoint="sm"
+        navbar={
+          <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
+            <Stack>
+              <Link to="/Canvas">Canvas</Link>
+              <Link to="/Map">Map</Link>
+            </Stack>
+          </Navbar>
+        }
+        header={
+          <Header height={70} p="md">
+            <div style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+              <MediaQuery largerThan="sm" styles={{ display: 'none' }}>
+                <Burger
+                  opened={opened}
+                  onClick={clickHandler}
+                  size="sm"
+                  color={theme.colors.gray[6]}
+                  mr="xl"
+                  
+                />
+              </MediaQuery>
+
+              <Text weight={500}>Sanvas</Text>
+            </div>
+          </Header>
+        }
+      >
+        <Routes>
+          <Route path="/Canvas" element={<Canvas/>}/>
+          <Route path="/Map" element={<Map/>}/>
+          <Route/>
+        </Routes>
+      </AppShell>
+    </BrowserRouter>
   );
 }
 
