@@ -32,8 +32,8 @@ function App() {
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
             <Stack>
-              <Link to="/Canvas">Canvas</Link>
-              <Link to="/Map">Map</Link>
+              <Link to="/Canvas" onClick={clickHandler}>Canvas</Link>
+              <Link to="/Map" onClick={clickHandler}>Map</Link>
             </Stack>
           </Navbar>
         }

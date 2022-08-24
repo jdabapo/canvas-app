@@ -116,7 +116,6 @@ function Map(){
         let d;
         let all_display = [];
         if (currentItem.displayName === ''){
-            console.log('d')
             tmp.description = "nothing is here...";
             tmp.imagePNG = noitem;
             all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
@@ -127,7 +126,6 @@ function Map(){
             setDisplayImage(all_display);
         }
         else if (currentItem.priorImages && currentItem.priorImages.length > 0){
-            console.log(currentItem.imagePNG);
             let image_text;
             // add all the prior images
             currentItem.priorImages.map((image)=>{
@@ -152,7 +150,10 @@ function Map(){
                 );
         }
         else{
-            setDisplayImage(<DisplayItem d="f" text="f" tmp={currentItem} currentCoords={currentCoords}/>);
+            d = new Date(0);
+            d.setUTCMilliseconds(currentItem.timeEpoch);
+            let text = `${currentItem.artName} by ${currentItem.displayName}`;
+            setDisplayImage(<DisplayItem d={d} text={text} tmp={currentItem} currentCoords={currentCoords}/>);
         }
 
     },[currentItem,currentCoords])
