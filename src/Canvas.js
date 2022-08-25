@@ -95,20 +95,22 @@ function Canvas() {
     if(docSnap.exists()){
       const docData = docSnap.data();
       // TODO: look at this https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
-      // if doc has an array, update it
+      // if doc has an array, update it. ELSE, create an empty priorImages array
       if (docData.priorImages){
         // if goes to 10, need to replace it so only 10 datapoints exist
         if (docData.priorImages.length === 10){
-          console.log('removing oldest');
           await updateDoc(docRef,{
             priorImages:arrayRemove(docData.priorImages[0])
           })
+
         }
-        delete docData.priorImages;
-        await updateDoc(docRef,{
-          priorImages:arrayUnion(docData)
-        });
-        // if not, just add onto back of array
+          // TODO: Bug here, deletes the first image shown
+          // delete docData.priorImages;
+          let tmp = docData;
+          tmp.priorImages = []
+          await updateDoc(docRef,{
+            priorImages:arrayUnion(tmp)
+          });
       }
       else{
         await updateDoc(docRef,{
@@ -120,12 +122,12 @@ function Canvas() {
         description: toSubmit.description,
         displayName: toSubmit.displayName,
         imagePNG: toSubmit.imagePNG,
+        timeEpoch: toSubmit.timeEpoch,
       });
     }
     else{
-      // if no images there, add a new field
-      let tmp = toSubmit;
-      console.log(tmp);
+      // if no images there, add a new field 
+      toSubmit["priorImages"] = []
       await setDoc(docRef,toSubmit);
     }
   }
