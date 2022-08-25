@@ -129,7 +129,6 @@ function Map(){
             let image_text;
             // add all the prior images
             currentItem.priorImages.map((image)=>{
-                console.log(image.imagePNG);
                 image_text = `${image.artName} by ${image.displayName}`;
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
@@ -140,7 +139,6 @@ function Map(){
             d = new Date(0);
             d.setUTCMilliseconds(currentItem.timeEpoch);
             all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>);
-            console.log(all_display)
             setDisplayImage(
                 <Carousel
                     height={500}

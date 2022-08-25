@@ -12,11 +12,11 @@ import {
 import { BrowserRouter, Route, Link, Routes } from 'react-router-dom';
 import Canvas from './Canvas';
 import Map from  './Map';
+import Home from './Home'
 function App() {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   function clickHandler(){
-    console.log('clicked')
     setOpened(!opened);
   }
   return (
@@ -32,6 +32,7 @@ function App() {
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
             <Stack>
+              <Link to="/" onClick={clickHandler}> Home</Link>
               <Link to="/Canvas" onClick={clickHandler}>Canvas</Link>
               <Link to="/Map" onClick={clickHandler}>Map</Link>
             </Stack>
@@ -57,6 +58,7 @@ function App() {
         }
       >
         <Routes>
+          <Route path="/" element={<Home/>}/>
           <Route path="/Canvas" element={<Canvas/>}/>
           <Route path="/Map" element={<Map/>}/>
           <Route/>

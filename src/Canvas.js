@@ -224,10 +224,10 @@ function Canvas() {
     // load the canvas initially, make it size of screen width
     // TODO: Fix this width && Fix for mobile
     const canvas = canvasRef.current;
-    canvas.width = window.innerWidth / 3;
-    canvas.height = window.innerHeight / 3;
-    canvas.style.width = `${window.innerWidth / 3}`;
-    canvas.style.height = `${window.innerHeight / 3}`;
+    canvas.width = "300";
+    canvas.height = "300";
+    canvas.style.width = "300px";
+    canvas.style.height = "300px";
     canvas.style.border = "1px solid black";
     
     const context = canvas.getContext('2d');
