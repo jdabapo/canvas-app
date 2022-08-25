@@ -120,7 +120,6 @@ function Canvas() {
         description: toSubmit.description,
         displayName: toSubmit.displayName,
         imagePNG: toSubmit.imagePNG,
-
       });
     }
     else{
@@ -221,6 +220,7 @@ function Canvas() {
   // set up the canvas
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
+    // TODO: Fix this width && Fix for mobile
     const canvas = canvasRef.current;
     canvas.width = window.innerWidth / 3;
     canvas.height = window.innerHeight / 3;
@@ -284,6 +284,7 @@ function Canvas() {
               />
               <Center>
                 <Text weight={500}>select line color: </Text>
+                {/* TODO: Change this because it lags too much*/}
                 <ColorInput ml="sm" format="rgb" value={color} onChange={setColor} />
                 <Button
                   m="md"
@@ -312,17 +313,19 @@ function Canvas() {
       <Grid.Col span={3}>
         <Paper shadow="xl" radius="md" p="md" withBorder>
           <form onSubmit={form.onSubmit((values)=> submitHandler(values))}>
+            <Text mb="md" weight={500}>enter information about your art</Text>
+            <TextInput
+              required
+              mb="md"
+              label="art name"
+              placeholder="enter art name here!"
+              {...form.getInputProps('artName')}
+            />
             <TextInput
             required
             label="display name"
             placeholder="enter display name here!"
             {...form.getInputProps('displayName')}
-            />
-            <TextInput
-              mt="md"
-              label="art name"
-              placeholder="enter art name here!"
-              {...form.getInputProps('artName')}
             />
             <Textarea
               mt="md"
