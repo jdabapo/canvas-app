@@ -16,6 +16,7 @@ import {
   Group
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useOs,useLocalStorage } from '@mantine/hooks';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
@@ -65,6 +66,7 @@ function Canvas() {
   const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
   const [opened,setOpened] = useState(false);
   const [dropdown,setDropdown] = useState([]);
+  const os = useOs();
 
   const clickHandler = (event) => {
     const coords = event.currentTarget.value;
@@ -223,6 +225,8 @@ function Canvas() {
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
     // TODO: Fix this width && Fix for mobile
+    
+    console.log(`OS is ${os}`);
     const canvas = canvasRef.current;
     canvas.width = "300";
     canvas.height = "300";
@@ -237,6 +241,14 @@ function Canvas() {
     context.strokeStyle = color;
     contextRef.current = context;
 
+    if (os === 'ios'){
+      console.log("window is",document.body.getBoundingClientRect().width);
+
+      canvas.width = document.body.getBoundingClientRect().width;
+      canvas.height = document.body.getBoundingClientRect().width;
+      canvas.style.width = document.body.getBoundingClientRect().width;
+      canvas.style.height = document.body.getBoundingClientRect().width;
+    }
   },[])
 
   // when color or linewidth changes
@@ -269,14 +281,13 @@ function Canvas() {
     contextRef.current.lineTo(x,y);
     contextRef.current.stroke();
   }
-
   return (
     <>
     <Grid grow>
       {/* Canvas */}
       <Grid.Col span={3}>
-          <Center inline>
-            <Paper shadow="xl" radius="md" p="md" withBorder >
+            <Paper shadow="xl" radius="md" p="md" withBorder>
+              <Center>
               <canvas
                 onMouseDown={startDrawing}
                 onMouseUp={endDrawing}
@@ -284,6 +295,7 @@ function Canvas() {
                 onMouseLeave={endDrawing}
                 ref = {canvasRef} 
               />
+              </Center>
               <Center>
                 <Text weight={500}>select line color: </Text>
                 {/* TODO: Change this because it lags too much*/}
@@ -297,6 +309,7 @@ function Canvas() {
                   clear canvas
                 </Button>
               </Center>
+              <Center>
               <Radio.Group
                 color='black'
                 value={lineWidth}
@@ -308,8 +321,8 @@ function Canvas() {
                 <Radio value="10" label="large" />
                 <Radio value="15" label="xtra large" />
               </Radio.Group>
+              </Center>
             </Paper>
-          </Center>
       </Grid.Col>
       {/* Form */}
       <Grid.Col span={3}>

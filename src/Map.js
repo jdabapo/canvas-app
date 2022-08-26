@@ -34,34 +34,34 @@ function DisplayItem({d, text, tmp, currentCoords}){
     // change image to the biggest image size
     return(
             <Card shadow="sm" p="lg" radius="md" withBorder>
-                            <Card.Section>
-                                <Image
-                                src={tmp.imagePNG}
-                                height="100%"
-                                alt={tmp.artName}
-                                />
-                            </Card.Section>
-                            <Group position="apart" mt="md" mb="xs">
-                                <Text weight={500}>
-                                    {text}
-                                </Text>
-                                <Badge color="pink" variant="light">
-                                    {d ? d.toLocaleString(): "no time yet"}
-                                </Badge>
-                            </Group>
-                            <Text size="sm" color="dimmed">
-                                {tmp.description}
-                            </Text>
-                            {currentCoords.x !== -1 ?
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md">
-                                item located at x:{currentCoords.x} y:{currentCoords.y}
-                            </Button>
-                            :
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
-                                select a red box to show an image!
-                            </Button>
-                            }
-                        </Card>
+                <Card.Section>
+                    <Image
+                    src={tmp.imagePNG}
+                    height="100%"
+                    alt={tmp.artName}
+                    />
+                </Card.Section>
+                <Group position="apart" mt="md" mb="xs">
+                    <Text weight={500}>
+                        {text}
+                    </Text>
+                    <Badge color="pink" variant="light">
+                        {d ? d.toLocaleString(): "no time yet"}
+                    </Badge>
+                </Group>
+                <Text size="sm" color="dimmed">
+                    {tmp.description}
+                </Text>
+                {currentCoords.x !== -1 ?
+                <Button variant="light" color="blue" fullWidth mt="md" radius="md">
+                    item located at x:{currentCoords.x} y:{currentCoords.y}
+                </Button>
+                :
+                <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
+                    select a red box to show an image!
+                </Button>
+                }
+            </Card>
     );
 }
 
@@ -127,22 +127,30 @@ function Map(){
         }
         else if (currentItem.priorImages && currentItem.priorImages.length > 0){
             let image_text;
+            let tmpFix = 0;
             // add all the prior images
             currentItem.priorImages.map((image)=>{
                 image_text = `${image.artName} by ${image.displayName}`;
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
-                all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>)
+                all_display.unshift(
+                        <DisplayItem key={tmpFix} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>
+                );
+                tmpFix += 1;
             });
             // push current item
             image_text = `${currentItem.artName} by ${currentItem.displayName}`;
             d = new Date(0);
             d.setUTCMilliseconds(currentItem.timeEpoch);
-            all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>);
+            all_display.unshift(
+                <Carousel.Slide>
+                    <DisplayItem key={tmpFix} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>
+                </Carousel.Slide>
+            );
+            let iter = all_display.keys()
+            for(const i of iter){console.log(i)};
             setDisplayImage(
-                <Carousel
-                    height={500}
-                >
+                <Carousel>
                     {all_display}
                 </Carousel>
                 );
@@ -222,7 +230,7 @@ function Map(){
     return(
         // first make an empty 10x10 grid
         <Grid grow>
-            <Grid.Col span={6}>
+            <Grid.Col span={6} style={{ minWidth:1000}}>
                 <Center>
                     <Paper shadow="xs" p="md" withBorder>
                         {displayImage}
