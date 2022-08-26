@@ -7,16 +7,20 @@ import {
         MediaQuery,
         Burger,
         useMantineTheme,
-        Stack
+        Stack,
+        ActionIcon
      } from '@mantine/core';
 import { BrowserRouter, Route, Link, Routes } from 'react-router-dom';
+import { IconAdjustments } from '@tabler/icons';
+
 import Canvas from './Canvas';
 import Map from  './Map';
+import Home from './Home';
+import Board from './Board';
 function App() {
   const theme = useMantineTheme();
   const [opened, setOpened] = useState(false);
   function clickHandler(){
-    console.log('clicked')
     setOpened(!opened);
   }
   return (
@@ -32,8 +36,10 @@ function App() {
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
             <Stack>
-              <Link to="/Canvas">Canvas</Link>
-              <Link to="/Map">Map</Link>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/'><ActionIcon><IconAdjustments size={18}/></ActionIcon>Home</Text>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/Canvas'>Canvas</Text>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/Map'>Map</Text>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/Board'>Board WIP</Text>
             </Stack>
           </Navbar>
         }
@@ -57,8 +63,10 @@ function App() {
         }
       >
         <Routes>
+          <Route path="/" element={<Home/>}/>
           <Route path="/Canvas" element={<Canvas/>}/>
           <Route path="/Map" element={<Map/>}/>
+          <Route path="/Board" element={<Board/>}/>
           <Route/>
         </Routes>
       </AppShell>

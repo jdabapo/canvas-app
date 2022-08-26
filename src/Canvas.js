@@ -16,10 +16,13 @@ import {
   Group
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useOs, useForceUpdate } from '@mantine/hooks';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons';
+import { openModal, closeAllModals } from '@mantine/modals';
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -33,11 +36,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// given a set of images, find largest width and height, and draw each of the images onto a canvas with that size.
-function normalizeImages(images){
-
-}
-
 function Canvas() {
   const placeholder_item = {
     description:'',
@@ -45,7 +43,7 @@ function Canvas() {
     artName:'',
     displayName:'',
     timeEpoch:''
-}
+  }
   const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
   
   const form = useForm({
@@ -63,22 +61,51 @@ function Canvas() {
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
   const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
-  const [opened,setOpened] = useState(false);
   const [dropdown,setDropdown] = useState([]);
+  const os = useOs();
+  const forceUpdate = useForceUpdate();
+
+  // TODO: Make the text work
+  // TODO: Make modal open when art is submitted
+  // TODO: Make live update to text (make this into a component?) https://mantine.dev/core/modal/
+  const openModalHandler = ({selectedCoords}) => {
+    let coords;
+    if(!selectedCoords){
+      coords = "no coords selected yet!"
+    }
+    else{
+      coords = `(${selectedCoords[0]},${selectedCoords[1]})`;
+    }
+    openModal({
+      title: 'select box to place art',
+      children: (
+        <>
+        <Text>current selected coords are: {coords}</Text>
+        <SimpleGrid cols={10}>
+          {dropdown}
+        </SimpleGrid>
+        </>
+      ),
+    });
+  }
 
   const clickHandler = (event) => {
+    console.log(event);
     const coords = event.currentTarget.value;
-    const tmp = {x:coords[0],y:coords[1]};
-    setCurrentCoords(tmp);
+    setCurrentCoords({x:coords[0],y:coords[1]});
+    //forceUpdate();
   }
 
   function createMapButton(row_idx,col_idx,cell) {
     let coords = '' + row_idx + col_idx;
-    // TODO: find out how to change color of button
+    let color = "blue";
+    if(cell.displayName){
+      color = "red";
+    }
     return (
       <Button
           size='xs'
-          color="blue"
+          color={color}
           key={coords}
           value={coords}
           onClick={clickHandler}
@@ -95,20 +122,22 @@ function Canvas() {
     if(docSnap.exists()){
       const docData = docSnap.data();
       // TODO: look at this https://firebase.google.com/docs/firestore/manage-data/add-data#update_elements_in_an_array
-      // if doc has an array, update it
+      // if doc has an array, update it. ELSE, create an empty priorImages array
       if (docData.priorImages){
         // if goes to 10, need to replace it so only 10 datapoints exist
         if (docData.priorImages.length === 10){
-          console.log('removing oldest');
           await updateDoc(docRef,{
             priorImages:arrayRemove(docData.priorImages[0])
           })
+
         }
-        delete docData.priorImages;
-        await updateDoc(docRef,{
-          priorImages:arrayUnion(docData)
-        });
-        // if not, just add onto back of array
+          // TODO: Bug here, deletes the first image shown
+          // delete docData.priorImages;
+          let tmp = docData;
+          tmp.priorImages = []
+          await updateDoc(docRef,{
+            priorImages:arrayUnion(tmp)
+          });
       }
       else{
         await updateDoc(docRef,{
@@ -120,26 +149,25 @@ function Canvas() {
         description: toSubmit.description,
         displayName: toSubmit.displayName,
         imagePNG: toSubmit.imagePNG,
-
+        timeEpoch: toSubmit.timeEpoch,
       });
     }
     else{
-      // if no images there, add a new field
-      let tmp = toSubmit;
-      console.log(tmp);
+      // if no images there, add a new field 
+      toSubmit["priorImages"] = []
       await setDoc(docRef,toSubmit);
     }
   }
 
   function submitHandler(values){
     // get the image saved in ref & timeEpoch
-    const tmp = canvasRef.current.toDataURL('image/png',0.3);
+    const img = canvasRef.current.toDataURL('image/png',0.3);
     const toSubmit = {
       artName:values.artName,
       displayName:values.displayName,
       description:values.description,
       timeEpoch:Date.now(),
-      imagePNG:tmp,
+      imagePNG:img,
     };
     showNotification({
       id: 'load-data',
@@ -160,8 +188,11 @@ function Canvas() {
           autoClose: 2500,
         });
       }, 1000)
+    ).then(
+      // create modal to show artwork and link to the map
+      // TODO
     );
-
+    
     
   }
 
@@ -187,32 +218,30 @@ function Canvas() {
   useEffect(()=>{
     let unsubscribe;
     async function getMap(db){
-        // set up the listener
-        unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
-
-            querySnapshot.docChanges().forEach((change)=>{
-
-              const x = change.doc.id[0];
-              const y = change.doc.id[2];
-              if (change.doc.data().displayName){
-                // all the filled squares shoud now be red
-                // TODO: find out why its not turning red
-                map_array[x][y] = change.doc.data();
-                createMapButton(x,y,change.doc.data());
-              }
-            })
-        });
-        // start the initial item list
-        // every button should be blue
-        let dropdown;
-        dropdown = map_array.map((rows,row_idx)=>{
-            let tmp = [];
-            rows.map((cell,col_idx)=>{
-                tmp.push(createMapButton(row_idx,col_idx,cell));
-            })
-            return tmp;
-        })
-        setDropdown(dropdown);
+      // set up the listener
+      // start the initial item list
+      // every button should be blue
+      let dropdown;
+      dropdown = map_array.map((rows,row_idx)=>{
+          let row = [];
+          rows.map((cell,col_idx)=>{
+              row.push(createMapButton(row_idx,col_idx,cell));
+          })
+          return row;
+      });
+      setDropdown(dropdown);
+      unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
+          querySnapshot.docChanges().forEach((change)=>{
+            const x = change.doc.id[0];
+            const y = change.doc.id[2];
+            if (change.doc.data().displayName){
+              map_array[x][y] = change.doc.data();
+              let changed_item = createMapButton(x,y,change.doc.data());
+              dropdown[x][y] = changed_item;
+              setDropdown(dropdown);
+            }
+          })
+      });
     };
     getMap(db);
     return () => unsubscribe();
@@ -221,11 +250,13 @@ function Canvas() {
   // set up the canvas
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
+    // TODO: Fix this width && Fix for mobile
+    
     const canvas = canvasRef.current;
-    canvas.width = window.innerWidth / 3;
-    canvas.height = window.innerHeight / 3;
-    canvas.style.width = `${window.innerWidth / 3}`;
-    canvas.style.height = `${window.innerHeight / 3}`;
+    canvas.width = "300";
+    canvas.height = "300";
+    canvas.style.width = "300px";
+    canvas.style.height = "300px";
     canvas.style.border = "1px solid black";
     
     const context = canvas.getContext('2d');
@@ -235,6 +266,14 @@ function Canvas() {
     context.strokeStyle = color;
     contextRef.current = context;
 
+    if (os === 'ios'){
+      console.log("window is",document.body.getBoundingClientRect().width);
+
+      canvas.width = document.body.getBoundingClientRect().width;
+      canvas.height = document.body.getBoundingClientRect().width;
+      canvas.style.width = document.body.getBoundingClientRect().width;
+      canvas.style.height = document.body.getBoundingClientRect().width;
+    }
   },[])
 
   // when color or linewidth changes
@@ -267,14 +306,13 @@ function Canvas() {
     contextRef.current.lineTo(x,y);
     contextRef.current.stroke();
   }
-
   return (
     <>
     <Grid grow>
       {/* Canvas */}
       <Grid.Col span={3}>
-          <Center inline>
-            <Paper shadow="xl" radius="md" p="md" withBorder >
+            <Paper shadow="xl" radius="md" p="md" withBorder>
+              <Center>
               <canvas
                 onMouseDown={startDrawing}
                 onMouseUp={endDrawing}
@@ -282,8 +320,10 @@ function Canvas() {
                 onMouseLeave={endDrawing}
                 ref = {canvasRef} 
               />
+              </Center>
               <Center>
                 <Text weight={500}>select line color: </Text>
+                {/* TODO: Change this because it lags too much*/}
                 <ColorInput ml="sm" format="rgb" value={color} onChange={setColor} />
                 <Button
                   m="md"
@@ -294,6 +334,7 @@ function Canvas() {
                   clear canvas
                 </Button>
               </Center>
+              <Center>
               <Radio.Group
                 color='black'
                 value={lineWidth}
@@ -305,24 +346,26 @@ function Canvas() {
                 <Radio value="10" label="large" />
                 <Radio value="15" label="xtra large" />
               </Radio.Group>
+              </Center>
             </Paper>
-          </Center>
       </Grid.Col>
       {/* Form */}
       <Grid.Col span={3}>
         <Paper shadow="xl" radius="md" p="md" withBorder>
           <form onSubmit={form.onSubmit((values)=> submitHandler(values))}>
+            <Text mb="md" weight={500}>enter information about your art</Text>
+            <TextInput
+              required
+              mb="md"
+              label="art name"
+              placeholder="enter art name here!"
+              {...form.getInputProps('artName')}
+            />
             <TextInput
             required
             label="display name"
             placeholder="enter display name here!"
             {...form.getInputProps('displayName')}
-            />
-            <TextInput
-              mt="md"
-              label="art name"
-              placeholder="enter art name here!"
-              {...form.getInputProps('artName')}
             />
             <Textarea
               mt="md"
@@ -339,13 +382,12 @@ function Canvas() {
               <Button
                   variant='outline'
                   gradient={{ from: 'blue', to:'pink', deg:25}}
-                  onClick={() => setOpened((o) => !o)}
+                  onClick={openModalHandler}
                   >select coordinates
               </Button>
               <Button
                 variant='gradient'
                 gradient={{from: 'blue', to:'pink', deg:5}}
-                onClick={() => setTimeout(setOpened(() => false),250)}
                 type="submit"
               >
                 submit your art
@@ -355,26 +397,6 @@ function Canvas() {
         </Paper>
       </Grid.Col>
     </Grid>
-    <Dialog
-        opened={opened}
-        size="lg"
-        shadow="xl" p={30} 
-        withCloseButton
-        onClose={() => setOpened(false)}
-        radius="md"
-        position={{ bottom: 20, left: 20 }}
-
-      >
-        <Stack>
-          <Paper align="center">
-            <Text weight={500}>select box to place art</Text>
-            <Text>current selected coordinates are ({currentCoords.x},{currentCoords.y})</Text>
-          </Paper>
-        </Stack>
-        <SimpleGrid cols={10}>
-          {dropdown}
-        </SimpleGrid>
-    </Dialog>
     </>
   );
 }

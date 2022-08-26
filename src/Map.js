@@ -34,34 +34,34 @@ function DisplayItem({d, text, tmp, currentCoords}){
     // change image to the biggest image size
     return(
             <Card shadow="sm" p="lg" radius="md" withBorder>
-                            <Card.Section>
-                                <Image
-                                src={tmp.imagePNG}
-                                height="100%"
-                                alt={tmp.artName}
-                                />
-                            </Card.Section>
-                            <Group position="apart" mt="md" mb="xs">
-                                <Text weight={500}>
-                                    {text}
-                                </Text>
-                                <Badge color="pink" variant="light">
-                                    {d ? d.toLocaleString(): "no time yet"}
-                                </Badge>
-                            </Group>
-                            <Text size="sm" color="dimmed">
-                                {tmp.description}
-                            </Text>
-                            {currentCoords.x !== -1 ?
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md">
-                                item located at x:{currentCoords.x} y:{currentCoords.y}
-                            </Button>
-                            :
-                            <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
-                                select a red box to show an image!
-                            </Button>
-                            }
-                        </Card>
+                <Card.Section>
+                    <Image
+                    src={tmp.imagePNG}
+                    height="100%"
+                    alt={tmp.artName}
+                    />
+                </Card.Section>
+                <Group position="apart" mt="md" mb="xs">
+                    <Text weight={500}>
+                        {text}
+                    </Text>
+                    <Badge color="pink" variant="light">
+                        {d ? d.toLocaleString(): "no time yet"}
+                    </Badge>
+                </Group>
+                <Text size="sm" color="dimmed">
+                    {tmp.description}
+                </Text>
+                {currentCoords.x !== -1 ?
+                <Button variant="light" color="blue" fullWidth mt="md" radius="md">
+                    item located at x:{currentCoords.x} y:{currentCoords.y}
+                </Button>
+                :
+                <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
+                    select a red box to show an image!
+                </Button>
+                }
+            </Card>
     );
 }
 
@@ -103,6 +103,7 @@ function Map(){
     }
 
     // whenever a different is clicked
+    // TODO: Fix carousel bc images just keep getting bigger
     useEffect(()=>{
         // pass the currentItem props to the thing
         let noitem = "https://media.istockphoto.com/photos/empty-pedestal-inside-exhibition-gallery-picture-id1271894342?k=20&m=1271894342&s=170667a&w=0&h=4Cy45Werofk-XvvjgxU_dYgoQgXRawE_TEEn3BsVbx0=";
@@ -116,7 +117,6 @@ function Map(){
         let d;
         let all_display = [];
         if (currentItem.displayName === ''){
-            console.log('d')
             tmp.description = "nothing is here...";
             tmp.imagePNG = noitem;
             all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
@@ -127,32 +127,38 @@ function Map(){
             setDisplayImage(all_display);
         }
         else if (currentItem.priorImages && currentItem.priorImages.length > 0){
-            console.log(currentItem.imagePNG);
             let image_text;
+            let tmpFix = 0;
             // add all the prior images
             currentItem.priorImages.map((image)=>{
-                console.log(image.imagePNG);
                 image_text = `${image.artName} by ${image.displayName}`;
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
-                all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>)
+                all_display.unshift(
+                        <DisplayItem key={tmpFix} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>
+                );
+                tmpFix += 1;
             });
             // push current item
             image_text = `${currentItem.artName} by ${currentItem.displayName}`;
             d = new Date(0);
             d.setUTCMilliseconds(currentItem.timeEpoch);
-            all_display.unshift(<DisplayItem key={d} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>);
-            console.log(all_display)
+            all_display.unshift(
+                <Carousel.Slide>
+                    <DisplayItem key={tmpFix} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>
+                </Carousel.Slide>
+            );
             setDisplayImage(
-                <Carousel
-                    height={500}
-                >
+                <Carousel>
                     {all_display}
                 </Carousel>
                 );
         }
         else{
-            setDisplayImage(<DisplayItem d="f" text="f" tmp={currentItem} currentCoords={currentCoords}/>);
+            d = new Date(0);
+            d.setUTCMilliseconds(currentItem.timeEpoch);
+            let text = `${currentItem.artName} by ${currentItem.displayName}`;
+            setDisplayImage(<DisplayItem d={d} text={text} tmp={currentItem} currentCoords={currentCoords}/>);
         }
 
     },[currentItem,currentCoords])
@@ -180,9 +186,12 @@ function Map(){
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
+                                // TODO: use setDisplay image here IF current item changes, should change what is being shown
                                 // maybe keep a small log of last X pictures?
                                 // update current item
                                 setCurrentItem(map_array[x][y]);
+                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
                             }
                         }
                     }
@@ -196,9 +205,12 @@ function Map(){
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
+                                // TODO: use setDisplay image here
                                 // maybe keep a small log of last X pictures?
                                 // update current item
                                 setCurrentItem(map_array[x][y]);
+                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
                             }
                         }
                     }
@@ -223,7 +235,7 @@ function Map(){
     return(
         // first make an empty 10x10 grid
         <Grid grow>
-            <Grid.Col span={6}>
+            <Grid.Col span={6} style={{ minWidth:1000}}>
                 <Center>
                     <Paper shadow="xs" p="md" withBorder>
                         {displayImage}
