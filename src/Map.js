@@ -103,6 +103,7 @@ function Map(){
     }
 
     // whenever a different is clicked
+    // TODO: Fix carousel bc images just keep getting bigger
     useEffect(()=>{
         // pass the currentItem props to the thing
         let noitem = "https://media.istockphoto.com/photos/empty-pedestal-inside-exhibition-gallery-picture-id1271894342?k=20&m=1271894342&s=170667a&w=0&h=4Cy45Werofk-XvvjgxU_dYgoQgXRawE_TEEn3BsVbx0=";
@@ -147,8 +148,6 @@ function Map(){
                     <DisplayItem key={tmpFix} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>
                 </Carousel.Slide>
             );
-            let iter = all_display.keys()
-            for(const i of iter){console.log(i)};
             setDisplayImage(
                 <Carousel>
                     {all_display}
@@ -187,9 +186,12 @@ function Map(){
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
+                                // TODO: use setDisplay image here IF current item changes, should change what is being shown
                                 // maybe keep a small log of last X pictures?
                                 // update current item
                                 setCurrentItem(map_array[x][y]);
+                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
                             }
                         }
                     }
@@ -203,9 +205,12 @@ function Map(){
                             createMapButton(x,y,change.doc.data());
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
+                                // TODO: use setDisplay image here
                                 // maybe keep a small log of last X pictures?
                                 // update current item
                                 setCurrentItem(map_array[x][y]);
+                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
                             }
                         }
                     }
