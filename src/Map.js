@@ -32,12 +32,19 @@ const db = getFirestore(app);
 
 function DisplayItem({d, text, tmp, currentCoords}){
     // change image to the biggest image size
+    if(!tmp.description){
+        tmp.description = "the author did not write anything for this art..."
+    }
+    else if(!d || d.toLocaleString() === 'Invalid Date'){
+        d = "no time yet...";
+    }
     return(
-            <Card shadow="sm" p="lg" radius="md" withBorder>
+            <Card shadow="sm" radius="md" withBorder>
                 <Card.Section>
                     <Image
                     src={tmp.imagePNG}
-                    height="100%"
+                    height={350}
+                    width={350}
                     alt={tmp.artName}
                     />
                 </Card.Section>
@@ -135,7 +142,9 @@ function Map(){
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
                 all_display.unshift(
+                    <Carousel.Slide>
                         <DisplayItem key={tmpFix} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>
+                    </Carousel.Slide>
                 );
                 tmpFix += 1;
             });
@@ -149,7 +158,10 @@ function Map(){
                 </Carousel.Slide>
             );
             setDisplayImage(
-                <Carousel>
+                <Carousel
+                withIndicators
+
+                >
                     {all_display}
                 </Carousel>
                 );
@@ -199,19 +211,17 @@ function Map(){
                         const x = change.doc.id[0];
                         const y = change.doc.id[2];
                         // update the item list at that coordinate
-                        if (change.doc.data().displayName){
-                            map_array[x][y] = change.doc.data();
-                            // console.log(x,y," added item @ map array data:",map_array[x][y]);
-                            createMapButton(x,y,change.doc.data());
-                            if (currentCoords.x === x && currentCoords.y === y){
-                                // TODO: add something here to make like transition?
-                                // TODO: use setDisplay image here
-                                // maybe keep a small log of last X pictures?
-                                // update current item
-                                setCurrentItem(map_array[x][y]);
-                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
-                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
-                            }
+                        map_array[x][y] = change.doc.data();
+                        // console.log(x,y," added item @ map array data:",map_array[x][y]);
+                        createMapButton(x,y,change.doc.data());
+                        if (currentCoords.x === x && currentCoords.y === y){
+                            // TODO: add something here to make like transition?
+                            // TODO: use setDisplay image here
+                            // maybe keep a small log of last X pictures?
+                            // update current item
+                            setCurrentItem(map_array[x][y]);
+                            let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+                            setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
                         }
                     }
                 });
@@ -234,15 +244,13 @@ function Map(){
     // if change in the snapshot, update that button
     return(
         // first make an empty 10x10 grid
-        <Grid grow>
-            <Grid.Col span={6} style={{ minWidth:1000}}>
-                <Center>
+        <Grid>
+            <Grid.Col span={6} style={{ minWidth: 500}}>
                     <Paper shadow="xs" p="md" withBorder>
                         {displayImage}
                     </Paper>
-                </Center>
             </Grid.Col>
-            <Grid.Col span={3} style={{ minWidth: 600 }}>
+            <Grid.Col span={3} style={{ minWidth: 500 }}>
                 <Center inline>
                     <Paper shadow="xl" radius="md" p="md" withBorder>
                         <SimpleGrid cols={10}>
