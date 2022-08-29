@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef }from 'react';
-import { getFirestore, collection } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
-import { useCollection } from 'react-firebase-hooks/firestore';
 import { Paper } from '@mantine/core';
 
 const firebaseConfig = {
@@ -17,21 +16,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export default function Board() {
-  const [snapshot,loading,error] = useCollection(
-    collection(db, 'map'),
-    {
-      snapshotListenOptions: { includeMetadataChanges: true },
-    }
-  )
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
   function drawImageOnCanvas(image,x,y){
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
-    console.log(x,y);
     try{
-      context.drawImage(image,x*100,y*100);
+      context.drawImage(image,y*350,x*350);
     }
     catch (e) {
       console.log(e);
@@ -40,41 +32,36 @@ export default function Board() {
 
   useEffect(()=>{
     // set up canvas
+    // TODO: MESS WITH THESE AND ALSO MAYBE ADD A ZOOM FEATURE?
     const canvas = canvasRef.current;
-    canvas.width = "3500";
-    canvas.height = "3500";
-    canvas.style.width = "3500px";
-    canvas.style.height = "3500px";
+    canvas.width = "1750";
+    canvas.height = "1750";
+    canvas.style.width = "1750px";
+    canvas.style.height = "1750px";
+    canvas.style.padding = "50px";
     canvas.style.border = "1px solid black";
     
     const context = canvas.getContext('2d');
-    context.scale(1,1);
+    context.scale(0.5,0.5);
     contextRef.current = context;
   },[]);
 
   useEffect(() =>{
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    context.scale(1,1);
-    contextRef.current = context;
-    if (error){
-      console.log('Firebase Error',error);
+    let unsubscribe;
+    async function getMap(db){
+     unsubscribe = onSnapshot(collection(db,"map"),(snapShot)=>{
+      snapShot.docChanges().forEach((change)=>{
+        const x = change.doc.id[0];
+        const y = change.doc.id[2];
+        const html_img = new Image(350,350);
+        html_img.src = change.doc.data().imagePNG;
+        drawImageOnCanvas(html_img,x,y);
+      })
+     }) 
     }
-    try{
-      if (snapshot){
-        snapshot.docChanges().map((change)=> {
-          const x = change.doc.id[0];
-          const y = change.doc.id[2];
-          const html_img = new Image(350,350);
-          html_img.src = change.doc.data().imagePNG;
-          drawImageOnCanvas(html_img,x,y);
-        })
-      }
-    }
-    catch (error) {
-      console.log(error)
-    }
-  },[snapshot,loading]);
+    getMap(db);
+  },[]);
+
   return (
     <>
     <Paper>
