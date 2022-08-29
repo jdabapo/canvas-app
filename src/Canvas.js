@@ -90,8 +90,8 @@ function Canvas() {
   }
 
   const clickHandler = (event) => {
-    console.log(event);
     const coords = event.currentTarget.value;
+    console.log(coords);
     setCurrentCoords({x:coords[0],y:coords[1]});
     //forceUpdate();
   }
@@ -183,7 +183,7 @@ function Canvas() {
           id: 'load-data',
           color: 'teal',
           title: 'data successfully uploaded!',
-          message: `go to the map coordinates (${currentCoords.x},${currentCoords.y}) to view your art!`,
+          message: `go to the map coordinates (${currentCoords.y},${currentCoords.x}) to view your art!`,
           icon: <IconCheck size={16} />,
           autoClose: 2500,
         });
@@ -375,7 +375,7 @@ function Canvas() {
               placeholder="leave a note here!"
               {...form.getInputProps('description', { type: 'Textarea' })}
             />
-            <Text weight={500}>current selected coordinates are x: {currentCoords.x} y: {currentCoords.y}</Text>
+            <Text weight={500}>current selected coordinates are x: {currentCoords.y} y: {currentCoords.x}</Text>
             <br></br>
             <Stack spacing="sm">
               {/*TODO: fix this, does not appear on some screens */}
