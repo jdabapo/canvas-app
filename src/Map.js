@@ -103,10 +103,10 @@ function Map(){
     const [displayImage,setDisplayImage] = useState(null);
     const clickHandler = (event) =>{
         const coords = event.currentTarget.value;
-        const x = coords[0];
-        const y = coords[1];
+        const x = coords[1];
+        const y = coords[0];
         setCurrentCoords({x,y})
-        setCurrentItem(map_array[x][y]);
+        setCurrentItem(map_array[y][x]);
     }
 
     // whenever a different is clicked
