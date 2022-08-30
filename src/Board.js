@@ -38,7 +38,7 @@ export default function Board() {
     canvas.height = "1750";
     canvas.style.width = "1750px";
     canvas.style.height = "1750px";
-    canvas.style.padding = "50px";
+    canvas.style.padding = "5px";
     canvas.style.border = "1px solid black";
     
     const context = canvas.getContext('2d');
