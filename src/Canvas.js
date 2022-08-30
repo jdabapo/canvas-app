@@ -8,12 +8,14 @@ import {
   Radio,
   Center,
   Grid,
-  Textarea, 
-  Popover,
+  Textarea,
   SimpleGrid,
   Stack,
-  Dialog,
-  Group
+  Group,
+  Modal,
+  Card,
+  Image,
+  Badge
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useOs, useForceUpdate } from '@mantine/hooks';
@@ -60,46 +62,52 @@ function Canvas() {
   const [lineWidth,setLineWidth] = useState(5);
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('rgb(222, 0, 0)');
-  const [currentCoords,setCurrentCoords] = useState({x:0,y:0});
+  const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
   const [dropdown,setDropdown] = useState([]);
+  const [opened,setOpened] = useState(false);
   const os = useOs();
   const forceUpdate = useForceUpdate();
 
   // TODO: Make the text work
   // TODO: Make modal open when art is submitted
   // TODO: Make live update to text (make this into a component?) https://mantine.dev/core/modal/
-  const openModalHandler = ({selectedCoords}) => {
-    let coords;
-    if(!selectedCoords){
-      coords = "no coords selected yet!"
-    }
-    else{
-      coords = `(${selectedCoords[0]},${selectedCoords[1]})`;
-    }
+  const openModalHandler = (toSubmit) => {
+    let coords = `(${currentCoords.y},${currentCoords.x})`;
     openModal({
-      title: 'select box to place art',
+      title: 'view your art!',
       children: (
-        <>
-        <Text>current selected coords are: {coords}</Text>
-        <SimpleGrid cols={10}>
-          {dropdown}
-        </SimpleGrid>
-        </>
+        <Card>
+          <Card.Section>
+            <Image
+              src={toSubmit.imagePNG}
+              height={350}
+              width={350}
+              alt={toSubmit.artName}
+            />
+          </Card.Section>
+          <Text size="sm" color="dimmed">
+            {toSubmit.description}
+          </Text>
+          <Button variant="light" color="blue" fullWidth mt="md" radius="md">
+            click to view your art at ({coords})
+          </Button>
+        </Card>
       ),
     });
   }
 
   const clickHandler = (event) => {
     const coords = event.currentTarget.value;
-    console.log(coords);
     setCurrentCoords({x:coords[0],y:coords[1]});
-    //forceUpdate();
   }
 
   function createMapButton(row_idx,col_idx,cell) {
     let coords = '' + row_idx + col_idx;
     let color = "blue";
-    if(cell.displayName){
+    if (cell === "selected"){
+      color = "green";
+    }
+    else if(cell.displayName){
       color = "red";
     }
     return (
@@ -188,10 +196,11 @@ function Canvas() {
           autoClose: 2500,
         });
       }, 1000)
-    ).then(
+    ).then(()=>{
       // create modal to show artwork and link to the map
       // TODO
-    );
+      openModalHandler(toSubmit)
+    });
     
     
   }
@@ -221,15 +230,15 @@ function Canvas() {
       // set up the listener
       // start the initial item list
       // every button should be blue
-      let dropdown;
-      dropdown = map_array.map((rows,row_idx)=>{
+      let map;
+      map = map_array.map((rows,row_idx)=>{
           let row = [];
           rows.map((cell,col_idx)=>{
               row.push(createMapButton(row_idx,col_idx,cell));
           })
           return row;
       });
-      setDropdown(dropdown);
+      setDropdown(map);
       unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
           querySnapshot.docChanges().forEach((change)=>{
             const x = change.doc.id[0];
@@ -237,8 +246,8 @@ function Canvas() {
             if (change.doc.data().displayName){
               map_array[x][y] = change.doc.data();
               let changed_item = createMapButton(x,y,change.doc.data());
-              dropdown[x][y] = changed_item;
-              setDropdown(dropdown);
+              map[x][y] = changed_item;
+              setDropdown(map);
             }
           })
       });
@@ -267,14 +276,22 @@ function Canvas() {
     contextRef.current = context;
 
     if (os === 'ios'){
-      console.log("window is",document.body.getBoundingClientRect().width);
 
-      canvas.width = document.body.getBoundingClientRect().width;
-      canvas.height = document.body.getBoundingClientRect().width;
-      canvas.style.width = document.body.getBoundingClientRect().width;
-      canvas.style.height = document.body.getBoundingClientRect().width;
     }
   },[])
+
+  // showing currently selected coordinate
+  useEffect(() =>{
+    function changeColor(x,y){
+      let changed_item = createMapButton(x,y,"selected");
+      dropdown[x][y] = changed_item;
+      setDropdown(dropdown);
+    }
+    if(currentCoords.x !== -1 || currentCoords.y !== -1){
+      console.log('setting color to green')
+      changeColor(currentCoords.x,currentCoords.y);
+    }
+  },[currentCoords.x,currentCoords.y]);
 
   // when color or linewidth changes
   useEffect(() =>{
@@ -306,6 +323,7 @@ function Canvas() {
     contextRef.current.lineTo(x,y);
     contextRef.current.stroke();
   }
+
   return (
     <>
     <Grid grow>
@@ -375,14 +393,15 @@ function Canvas() {
               placeholder="leave a note here!"
               {...form.getInputProps('description', { type: 'Textarea' })}
             />
-            <Text weight={500}>current selected coordinates are x: {currentCoords.y} y: {currentCoords.x}</Text>
+            {currentCoords.x === -1 && currentCoords.y === -1 && <Text weight={500}>select your coordinates first!</Text>}
+            {currentCoords.x !== -1 && currentCoords.y !== -1 && <Text weight={500}>current coordinates are x:{currentCoords.y},  y:{currentCoords.x}</Text>}
             <br></br>
             <Stack spacing="sm">
               {/*TODO: fix this, does not appear on some screens */}
               <Button
                   variant='outline'
                   gradient={{ from: 'blue', to:'pink', deg:25}}
-                  onClick={openModalHandler}
+                  onClick={() => {setOpened(true)}}
                   >select coordinates
               </Button>
               <Button
@@ -397,6 +416,17 @@ function Canvas() {
         </Paper>
       </Grid.Col>
     </Grid>
+    <Modal
+      opened={opened}
+      onClose={() => setOpened(false)}
+      title="select coordinate!"
+    >
+        {currentCoords.x === -1 && currentCoords.y === -1 && <Text weight={500}>select your coordinates first!</Text>}
+        {currentCoords.x !== -1 && currentCoords.y !== -1 && <Text weight={500}>current coordinates are x:{currentCoords.y},  y:{currentCoords.x}</Text>}
+        <SimpleGrid cols={10}>
+          {dropdown}
+        </SimpleGrid>
+    </Modal>
     </>
   );
 }

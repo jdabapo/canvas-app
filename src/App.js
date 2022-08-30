@@ -36,10 +36,10 @@ function App() {
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
             <Stack>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/'><ActionIcon><IconAdjustments size={18}/></ActionIcon>Home</Text>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/'>Home</Text>
               <Text onClick={clickHandler} component={Link} variant='link' to='/Canvas'>Canvas</Text>
               <Text onClick={clickHandler} component={Link} variant='link' to='/Map'>Map</Text>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/Board'>Board WIP</Text>
+              <Text onClick={clickHandler} component={Link} variant='link' to='/Board'>Board</Text>
             </Stack>
           </Navbar>
         }
