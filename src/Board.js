@@ -30,25 +30,21 @@ export default function Board() {
     }
   }
 
-  useEffect(()=>{
-    // set up canvas
-    // TODO: MESS WITH THESE AND ALSO MAYBE ADD A ZOOM FEATURE?
-    const canvas = canvasRef.current;
-    canvas.width = "1750";
-    canvas.height = "1750";
-    canvas.style.width = "1750px";
-    canvas.style.height = "1750px";
-    canvas.style.padding = "5px";
-    canvas.style.border = "1px solid black";
-    
-    const context = canvas.getContext('2d');
-    context.scale(0.5,0.5);
-    contextRef.current = context;
-  },[]);
 
   useEffect(() =>{
     let unsubscribe;
     async function getMap(db){
+      const canvas = canvasRef.current;
+      canvas.width = "1750";
+      canvas.height = "1750";
+      canvas.style.width = "1750px";
+      canvas.style.height = "1750px";
+      canvas.style.padding = "5px";
+      canvas.style.border = "1px solid black";
+      
+      const context = canvas.getContext('2d');
+      context.scale(0.5,0.5);
+      contextRef.current = context;
      unsubscribe = onSnapshot(collection(db,"map"),(snapShot)=>{
       snapShot.docChanges().forEach((change)=>{
         const x = change.doc.id[0];
@@ -59,6 +55,7 @@ export default function Board() {
       })
      }) 
     }
+
     getMap(db);
   },[]);
 
