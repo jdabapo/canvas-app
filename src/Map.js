@@ -42,10 +42,10 @@ function DisplayItem({d, text, tmp, currentCoords}){
             <Card shadow="sm" radius="md" withBorder>
                 <Card.Section>
                     <Image
-                    src={tmp.imagePNG}
-                    height={350}
-                    width={350}
-                    alt={tmp.artName}
+                        src={tmp.imagePNG}
+                        height={350}
+                        width={350}
+                        alt={tmp.artName}
                     />
                 </Card.Section>
                 <Group position="apart" mt="md" mb="xs">
@@ -245,7 +245,7 @@ function Map(){
     return(
         // first make an empty 10x10 grid
         <Grid>
-            <Grid.Col span={6} style={{ minWidth: 500}}>
+            <Grid.Col span={6} style={{ maxWidth: 500}}>
                     <Paper shadow="xs" p="md" withBorder>
                         {displayImage}
                     </Paper>
