@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef }from 'react';
 import { 
-  ColorInput, 
+  ColorPicker,
+  DEFAULT_THEME,
   Paper,
   Text, 
   TextInput, 
@@ -15,9 +16,10 @@ import {
   Modal,
   Card,
   Image,
-  Badge
+  Menu
   } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import {Link} from 'react-router-dom';
 import { useOs, useForceUpdate } from '@mantine/hooks';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
@@ -37,6 +39,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+
 
 function Canvas() {
   const placeholder_item = {
@@ -61,16 +65,17 @@ function Canvas() {
   const contextRef = useRef(null);
   const [lineWidth,setLineWidth] = useState(5);
   const [isDrawing,setIsDrawing] = useState(false);
-  const [color,setColor] = useState('rgb(222, 0, 0)');
+  const [color,setColor] = useState('#CC0000');
   const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
   const [dropdown,setDropdown] = useState([]);
   const [opened,setOpened] = useState(false);
+  const [openColors,setOpenColors] = useState(false);
   const os = useOs();
-  const forceUpdate = useForceUpdate();
-
   // TODO: Make the text work
   // TODO: Make modal open when art is submitted
   // TODO: Make live update to text (make this into a component?) https://mantine.dev/core/modal/
+
+
   const openModalHandler = (toSubmit) => {
     let coords = `(${currentCoords.y},${currentCoords.x})`;
     openModal({
@@ -88,8 +93,8 @@ function Canvas() {
           <Text size="sm" color="dimmed">
             {toSubmit.description}
           </Text>
-          <Button variant="light" color="blue" fullWidth mt="md" radius="md">
-            click to view your art at ({coords})
+          <Button variant="light" color="blue" fullWidth mt="md" radius="md" a href="https://google.com">
+            click to view your art at {coords}
           </Button>
         </Card>
       ),
@@ -167,8 +172,45 @@ function Canvas() {
     }
   }
 
+  function showErrorNotif(e){
+    let msg;
+    if (e === "no-coords"){
+      msg = 'select valid coords!'
+    }
+    else if(e === "no-artName"){
+      msg = 'write a name for your masterpiece!'
+
+    }
+    else if(e === "no-displayName"){
+      msg = 'what is the name of the artist?'
+
+    }
+    return(showNotification({
+      id: 'error-msg',
+      loading: false,
+      color: "red",
+      title: 'error',
+      message: msg,
+      autoClose: 5000,
+      disallowClose: false,
+    }))
+  }
+
   function submitHandler(values){
     // get the image saved in ref & timeEpoch
+    if(currentCoords.x === -1 || currentCoords.y === -1){
+      showErrorNotif("no-coords");
+      return;
+    }
+    else if (!values.artName){
+      showErrorNotif("no-artName");
+      return;
+
+    }
+    else if (!values.displayName){
+      showErrorNotif("no-displayName");
+      return;
+    }
     const img = canvasRef.current.toDataURL('image/png',0.3);
     const toSubmit = {
       artName:values.artName,
@@ -244,6 +286,7 @@ function Canvas() {
             const x = change.doc.id[0];
             const y = change.doc.id[2];
             if (change.doc.data().displayName){
+              console.log(map_array[x][y])
               map_array[x][y] = change.doc.data();
               let changed_item = createMapButton(x,y,change.doc.data());
               map[x][y] = changed_item;
@@ -288,7 +331,6 @@ function Canvas() {
       setDropdown(dropdown);
     }
     if(currentCoords.x !== -1 || currentCoords.y !== -1){
-      console.log('setting color to green')
       changeColor(currentCoords.x,currentCoords.y);
     }
   },[currentCoords.x,currentCoords.y]);
@@ -340,9 +382,42 @@ function Canvas() {
               />
               </Center>
               <Center>
-                <Text weight={500}>select line color: </Text>
+               
                 {/* TODO: Change this because it lags too much*/}
-                <ColorInput ml="sm" format="rgb" value={color} onChange={setColor} />
+                <Button styles={(theme) => ({
+                  root: {
+                    backgroundColor:color,
+                    '&:hover': {
+                      backgroundColor: theme.fn.darken(color, 0.05),
+                    },
+
+                  },
+
+                })} mr="md">current color</Button>
+                <Menu opened={openColors} onChange={setOpenColors}>
+                  <Menu.Target>
+                    <Button> <Text weight={500}>select line color: </Text></Button>
+                  </Menu.Target>
+                  <Menu.Dropdown>
+                    <ColorPicker
+                    format="hex"
+                    value={color}
+                    onChange={setColor}
+                    withPicker={false}
+                    size='md'
+                    swatches={[
+                      ...DEFAULT_THEME.colors.red,
+                      ...DEFAULT_THEME.colors.green,
+                      ...DEFAULT_THEME.colors.cyan,
+                      ...DEFAULT_THEME.colors.blue,
+                      ...DEFAULT_THEME.colors.yellow,
+                      ...DEFAULT_THEME.colors.gray,
+                    ]}
+                  />
+                  </Menu.Dropdown>
+                </Menu>
+                
+
                 <Button
                   m="md"
                   variant='gradient'
@@ -373,15 +448,15 @@ function Canvas() {
           <form onSubmit={form.onSubmit((values)=> submitHandler(values))}>
             <Text mb="md" weight={500}>enter information about your art</Text>
             <TextInput
-              required
               mb="md"
+              description="required"
               label="art name"
               placeholder="enter art name here!"
               {...form.getInputProps('artName')}
             />
             <TextInput
-            required
             label="display name"
+            description="required"
             placeholder="enter display name here!"
             {...form.getInputProps('displayName')}
             />
