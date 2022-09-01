@@ -286,7 +286,6 @@ function Canvas() {
             const x = change.doc.id[0];
             const y = change.doc.id[2];
             if (change.doc.data().displayName){
-              console.log(map_array[x][y])
               map_array[x][y] = change.doc.data();
               let changed_item = createMapButton(x,y,change.doc.data());
               map[x][y] = changed_item;
@@ -319,7 +318,8 @@ function Canvas() {
     contextRef.current = context;
 
     if (os === 'ios'){
-
+      window.addEventListener("touchstart",startDrawing);
+      canvas.style["touch-action"] = "none";
     }
   },[])
 
@@ -346,9 +346,19 @@ function Canvas() {
 
   // drawing functions
   const startDrawing = ({nativeEvent}) =>{
-    const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
     contextRef.current.beginPath();
-    contextRef.current.moveTo(x,y);
+    if(os === 'ios' || os === 'android'){
+      if (nativeEvent && nativeEvent.touches){
+        const clientX = nativeEvent.touches[0].clientX;
+        const clientY = nativeEvent.touches[0].clientY;
+        const { cx, cy } = computePointInCanvas(clientX,clientY);
+        contextRef.current.moveTo(cx, cy);
+      }
+    }
+    else{
+      const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
+      contextRef.current.moveTo(x,y);
+    }
     setIsDrawing(true);
   }
   
@@ -361,8 +371,17 @@ function Canvas() {
     if (!isDrawing){
       return;
     }
-    const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
-    contextRef.current.lineTo(x,y);
+    if(os === 'ios' || os === 'android'){
+      const clientX = nativeEvent.touches[0].clientX;
+      const clientY = nativeEvent.touches[0].clientY;
+      const { x, y } = computePointInCanvas(clientX,clientY);
+      contextRef.current.lineTo(x, y);
+    }
+    else{
+      const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
+      contextRef.current.lineTo(x,y);
+
+    }
     contextRef.current.stroke();
   }
 
@@ -378,6 +397,9 @@ function Canvas() {
                 onMouseUp={endDrawing}
                 onMouseMove={draw}
                 onMouseLeave={endDrawing}
+                onTouchStart={startDrawing}
+                onTouchEnd={endDrawing}
+                onTouchMove={draw}
                 ref = {canvasRef} 
               />
               </Center>
