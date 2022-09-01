@@ -14,6 +14,7 @@ import { BrowserRouter, Route, Link, Routes } from 'react-router-dom';
 import { IconAdjustments } from '@tabler/icons';
 
 import Canvas from './Canvas';
+import Canvas2 from './Canvas2';
 import Map from  './Map';
 import Home from './Home';
 import Board from './Board';
@@ -26,11 +27,6 @@ function App() {
   return (
     <BrowserRouter>
       <AppShell
-        styles={{
-          main: {
-            background: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-          },
-        }}
         navbarOffsetBreakpoint="sm"
         asideOffsetBreakpoint="sm"
         navbar={
@@ -65,6 +61,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home/>}/>
           <Route path="/Canvas" element={<Canvas/>}/>
+          <Route path="/Canvas2" element={<Canvas2/>}/>
           <Route path="/Map" element={<Map/>}/>
           <Route path="/Board" element={<Board/>}/>
           <Route/>
