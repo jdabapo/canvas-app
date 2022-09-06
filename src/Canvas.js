@@ -30,18 +30,10 @@ import { showNotification, updateNotification } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons';
 import { openModal, closeAllModals } from '@mantine/modals';
 import { IconQuestionMark } from '@tabler/icons';
+import * as firebase from './utils/Firebase';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
-  authDomain: "sanvas-5ba8d.firebaseapp.com",
-  projectId: "sanvas-5ba8d",
-  storageBucket: "sanvas-5ba8d.appspot.com",
-  messagingSenderId: "731507510180",
-  appId: "1:731507510180:web:88ef579c6281ec640acf31"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app = firebase.app;
+const db = firebase.db;
 
 
 
