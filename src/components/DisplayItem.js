@@ -9,7 +9,7 @@ import {
     Button
 } from '@mantine/core';
 
-function DisplayItem({d, text, tmp, currentCoords}){
+function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
     // change image to the biggest image size
     if(!tmp.description){
         tmp.description = "the author did not write anything for this art..."
