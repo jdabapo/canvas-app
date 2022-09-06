@@ -55,7 +55,7 @@ function Canvas() {
   });
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
-  const [lineWidth,setLineWidth] = useState(5);
+  const [lineWidth,setLineWidth] = useState('5');
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('#CC0000');
   const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
