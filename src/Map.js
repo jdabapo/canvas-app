@@ -12,7 +12,7 @@ import MapButton from './components/MapButton';
 import * as firebase from './utils/Firebase';
 
 let db = firebase.db;
-const placeholder_item = {
+const placeholderItem = {
     description:'',
     imagePNG:'',
     artName:'',
@@ -20,7 +20,7 @@ const placeholder_item = {
     timeEpoch:'',
 }    
 
-const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
+const mapArray = new Array(10).fill(placeholderItem).map(() => new Array(10).fill(placeholderItem));
 function Map(){
     // array should be 10x10 (0-9)
     const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
@@ -42,39 +42,39 @@ function Map(){
             description:"select any box to see art work!"
         };
         let d;
-        let all_display = [];
+        let allDisplay = [];
         if (currentItem.displayName === ''){
             tmp.description = "nothing is here...";
             tmp.imagePNG = noitem;
-            all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
-            setDisplayImage(all_display);
+            allDisplay.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
+            setDisplayImage(allDisplay);
         }
         else if(currentCoords.x === -1 && currentCoords.y === -1){
-            all_display.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
-            setDisplayImage(all_display);
+            allDisplay.push(<DisplayItem key={tmp.timeEpoch} d={tmp.timeEpoch} tmp={tmp} currentCoords={currentCoords}/>)
+            setDisplayImage(allDisplay);
         }
         else if (currentItem.priorImages && currentItem.priorImages.length > 0){
-            let image_text;
+            let imageText;
             let tmpFix = 0;
             // add all the prior images
             currentItem.priorImages.map((image)=>{
-                image_text = `${image.artName} by ${image.displayName}`;
+                imageText = `${image.artName} by ${image.displayName}`;
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
-                all_display.unshift(
+                allDisplay.unshift(
                     <Carousel.Slide>
-                        <DisplayItem key={tmpFix} d={d} text={image_text} tmp={image} currentCoords={currentCoords}/>
+                        <DisplayItem key={tmpFix} d={d} text={imageText} tmp={image} currentCoords={currentCoords}/>
                     </Carousel.Slide>
                 );
                 tmpFix += 1;
             });
             // push current item
-            image_text = `${currentItem.artName} by ${currentItem.displayName}`;
+            imageText = `${currentItem.artName} by ${currentItem.displayName}`;
             d = new Date(0);
             d.setUTCMilliseconds(currentItem.timeEpoch);
-            all_display.unshift(
+            allDisplay.unshift(
                 <Carousel.Slide>
-                    <DisplayItem key={tmpFix} d={d} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>
+                    <DisplayItem key={tmpFix} d={d} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>
                 </Carousel.Slide>
             );
             setDisplayImage(
@@ -82,7 +82,7 @@ function Map(){
                 withIndicators
 
                 >
-                    {all_display}
+                    {allDisplay}
                 </Carousel>
                 );
         }
@@ -105,17 +105,17 @@ function Map(){
                 const x = Number(coords[1]);
                 const y = Number(coords[0]);
                 setCurrentCoords({x,y})
-                setCurrentItem(map_array[y][x]);
-                let tmp_list = [];
+                setCurrentItem(mapArray[y][x]);
+                let tmpList = [];
                 console.log("click",itemList)
                 // TODO: problem is itemList is not being updated before the clickhandler fires
                 // itemList.forEach(inner => {
                 //     console.log(inner);
-                //     tmp_list.push(inner.slice())
-                //     console.log(tmp_list);
+                //     tmpList.push(inner.slice())
+                //     console.log(tmpList);
                 // });
-                // tmp_list[y][x] = <div>fjj</div>
-                // setItemList(tmp_list)
+                // tmpList[y][x] = <div>fjj</div>
+                // setItemList(tmpList)
             }
             // set up the listener
             unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
@@ -125,7 +125,7 @@ function Map(){
                     if (change.type === "modified") {
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
-                            map_array[x][y] = change.doc.data();
+                            mapArray[x][y] = change.doc.data();
                             showNotification({
                                 id:'new-item',
                                 loading:false,
@@ -138,31 +138,31 @@ function Map(){
                                 // TODO: use setDisplay image here IF current item changes, should change what is being shown
                                 // maybe keep a small log of last X pictures?
                                 // update current item
-                                setCurrentItem(map_array[x][y]);
-                                let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
-                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
+                                setCurrentItem(mapArray[x][y]);
+                                let imageText = `${currentItem.artName} by ${currentItem.displayName}`;
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>)
                             }
                         }
                     }
                     if (change.type === "added") {
                         // update the item list at that coordinate
-                        map_array[x][y] = change.doc.data();
-                        // console.log(x,y," added item @ map array data:",map_array[x][y]);
+                        mapArray[x][y] = change.doc.data();
+                        // console.log(x,y," added item @ map array data:",mapArray[x][y]);
                         MapButton(x,y,change.doc.data(),clickHandler);
                         if (currentCoords.x === x && currentCoords.y === y){
                             // TODO: add something here to make like transition?
                             // TODO: use setDisplay image here
                             // maybe keep a small log of last X pictures?
                             // update current item
-                            setCurrentItem(map_array[x][y]);
-                            let image_text = `${currentItem.artName} by ${currentItem.displayName}`;
-                            setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={image_text} tmp={currentItem} currentCoords={currentCoords}/>)
+                            setCurrentItem(mapArray[x][y]);
+                            let imageText = `${currentItem.artName} by ${currentItem.displayName}`;
+                            setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>)
                         }
                     }
                 });
                 // start the initial item list
                 let item_list;
-                item_list = map_array.map((rows,row_idx)=>{
+                item_list = mapArray.map((rows,row_idx)=>{
                     let tmp = [];
                     rows.map((cell,col_idx)=>{
                         tmp.push(MapButton(row_idx,col_idx,cell,clickHandler));

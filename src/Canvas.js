@@ -24,28 +24,25 @@ import {
 import MapButton from './components/MapButton';
 import { useForm } from '@mantine/form';
 import { useOs, useDisclosure } from '@mantine/hooks';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
+import { doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons';
-import { openModal, closeAllModals } from '@mantine/modals';
+import { openModal } from '@mantine/modals';
 import { IconQuestionMark } from '@tabler/icons';
 import * as firebase from './utils/Firebase';
 
 const app = firebase.app;
 const db = firebase.db;
 
-
-
 function Canvas() {
-  const placeholder_item = {
+  const placeholderItem = {
     description:'',
     imagePNG:'',
     artName:'',
     displayName:'',
     timeEpoch:''
   }
-  const map_array = new Array(10).fill(placeholder_item).map(() => new Array(10).fill(placeholder_item));
+  const mapArray = new Array(10).fill(placeholderItem).map(() => new Array(10).fill(placeholderItem));
   
   const form = useForm({
     initialValues: {
@@ -213,8 +210,6 @@ function Canvas() {
         });
       }, 1000)
     ).then(()=>{
-      // create modal to show artwork and link to the map
-      // TODO
       openModalHandler(toSubmit)
     });
     
@@ -247,7 +242,7 @@ function Canvas() {
       // start the initial item list
       // every button should be blue
       let map;
-      map = map_array.map((rows,row_idx)=>{
+      map = mapArray.map((rows,row_idx)=>{
           let row = [];
           rows.map((cell,col_idx)=>{
               row.push(MapButton(row_idx,col_idx,cell,clickHandler));
@@ -260,7 +255,7 @@ function Canvas() {
             const x = change.doc.id[0];
             const y = change.doc.id[2];
             if (change.doc.data().displayName){
-              map_array[x][y] = change.doc.data();
+              mapArray[x][y] = change.doc.data();
               let changed_item = MapButton(x,y,change.doc.data(),clickHandler);
               map[x][y] = changed_item;
               setDropdown(map);
@@ -298,16 +293,17 @@ function Canvas() {
   },[])
 
   // showing currently selected coordinate
-  useEffect(() =>{
-    function changeColor(x,y){
-      let changed_item = MapButton(x,y,"selected",clickHandler);
-      dropdown[x][y] = changed_item;
-      setDropdown(dropdown);
-    }
-    if(currentCoords.x !== -1 || currentCoords.y !== -1){
-      changeColor(currentCoords.x,currentCoords.y);
-    }
-  },[currentCoords.x,currentCoords.y]);
+  // TODO: FIX THIS, THIS MAKES THE SQUARE GREEN AFTER
+  // useEffect(() =>{
+  //   function changeColor(x,y){
+  //     let changed_item = MapButton(x,y,"selected",clickHandler);
+  //     dropdown[x][y] = changed_item;
+  //     setDropdown(dropdown);
+  //   }
+  //   if(currentCoords.x !== -1 || currentCoords.y !== -1){
+  //     changeColor(currentCoords.x,currentCoords.y);
+  //   }
+  // },[currentCoords.x,currentCoords.y]);
 
   // when color or linewidth changes
   useEffect(() =>{

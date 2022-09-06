@@ -49,9 +49,9 @@ export default function Board() {
       snapShot.docChanges().forEach((change)=>{
         const x = change.doc.id[0];
         const y = change.doc.id[2];
-        const html_img = new Image(350,350);
-        html_img.src = change.doc.data().imagePNG;
-        drawImageOnCanvas(html_img,x,y);
+        const htmlImg = new Image(350,350);
+        htmlImg.src = change.doc.data().imagePNG;
+        drawImageOnCanvas(htmlImg,x,y);
       })
      }) 
     }
