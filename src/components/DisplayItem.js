@@ -38,15 +38,6 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
                 <Text size="sm" color="dimmed">
                     {tmp.description}
                 </Text>
-                {currentCoords.x !== -1 ?
-                <Button variant="light" color="blue" fullWidth mt="md" radius="md">
-                    item located at x:{currentCoords.x} y:{currentCoords.y}
-                </Button>
-                :
-                <Button variant="light" color="blue" fullWidth mt="md" radius="md" disabled>
-                    select a red box to show an image!
-                </Button>
-                }
             </Card>
     );
 }

@@ -478,7 +478,7 @@ function Canvas() {
                   <Highlight highlightColor="red" highlight={[
                     "tiles",
                     "red"
-                  ]}>tiles with red are taken the darker the square the more images are on the tile</Highlight>
+                  ]}>tiles with red are taken</Highlight>
                   <Highlight highlightColor="blue" highlight={[
                     "tiles",
                     "blue"
