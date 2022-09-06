@@ -7,14 +7,13 @@ import {
         MediaQuery,
         Burger,
         useMantineTheme,
-        Stack,
-        ActionIcon
+        Menu,
+        Group,
+        Image
      } from '@mantine/core';
 import { BrowserRouter, Route, Link, Routes } from 'react-router-dom';
-import { IconAdjustments } from '@tabler/icons';
 
 import Canvas from './Canvas';
-import Canvas2 from './Canvas2';
 import Map from  './Map';
 import Home from './Home';
 import Board from './Board';
@@ -31,12 +30,12 @@ function App() {
         asideOffsetBreakpoint="sm"
         navbar={
           <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-            <Stack>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/'>Home</Text>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/Canvas'>Canvas</Text>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/Map'>Map</Text>
-              <Text onClick={clickHandler} component={Link} variant='link' to='/Board'>Board</Text>
-            </Stack>
+            <Menu>
+              <Menu.Item onClick={clickHandler} component={Link} variant='link' to='/'>home</Menu.Item>
+              <Menu.Item onClick={clickHandler} component={Link} variant='link' to='/Canvas'>canvas</Menu.Item>
+              <Menu.Item onClick={clickHandler} component={Link} variant='link' to='/Map'>map</Menu.Item>
+              <Menu.Item onClick={clickHandler} component={Link} variant='link' to='/Board'>board</Menu.Item>
+            </Menu>
           </Navbar>
         }
         header={
@@ -47,13 +46,14 @@ function App() {
                   opened={opened}
                   onClick={clickHandler}
                   size="sm"
-                  color={theme.colors.gray[6]}
                   mr="xl"
                   
                 />
               </MediaQuery>
-
-              <Text weight={500}>Sanvas</Text>
+              <Group>
+                <Image src="/favicon.ico" width={50} height={50}/>
+                <Text weight={500}>doodlepad</Text>
+              </Group>
             </div>
           </Header>
         }
@@ -61,7 +61,6 @@ function App() {
         <Routes>
           <Route path="/" element={<Home/>}/>
           <Route path="/Canvas" element={<Canvas/>}/>
-          <Route path="/Canvas2" element={<Canvas2/>}/>
           <Route path="/Map" element={<Map/>}/>
           <Route path="/Board" element={<Board/>}/>
           <Route/>
