@@ -12,21 +12,24 @@ import {
   Textarea,
   SimpleGrid,
   Stack,
-  Group,
+  Popover,
   Modal,
   Card,
   Image,
-  Menu
+  Menu,
+  ActionIcon,
+  Highlight,
+  Group
   } from '@mantine/core';
+import MapButton from './components/MapButton';
 import { useForm } from '@mantine/form';
-import {Link} from 'react-router-dom';
-import { useOs, useForceUpdate } from '@mantine/hooks';
+import { useOs, useDisclosure } from '@mantine/hooks';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
 import { IconCheck } from '@tabler/icons';
 import { openModal, closeAllModals } from '@mantine/modals';
-
+import { IconQuestionMark } from '@tabler/icons';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -68,8 +71,9 @@ function Canvas() {
   const [color,setColor] = useState('#CC0000');
   const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
   const [dropdown,setDropdown] = useState([]);
-  const [opened,setOpened] = useState(false);
+  const [openedModal,setOpenedModal] = useState(false);
   const [openColors,setOpenColors] = useState(false);
+  const [openPopover, { close, open }] = useDisclosure(false);
   const os = useOs();
   // TODO: Make the text work
   // TODO: Make modal open when art is submitted
@@ -77,7 +81,6 @@ function Canvas() {
 
 
   const openModalHandler = (toSubmit) => {
-    let coords = `(${currentCoords.y},${currentCoords.x})`;
     openModal({
       title: 'view your art!',
       children: (
@@ -93,9 +96,9 @@ function Canvas() {
           <Text size="sm" color="dimmed">
             {toSubmit.description}
           </Text>
-          <Button variant="light" color="blue" fullWidth mt="md" radius="md" a href="https://google.com">
-            click to view your art at {coords}
-          </Button>
+          <a href="Board">
+            click to view your art on the board
+          </a>
         </Card>
       ),
     });
@@ -104,27 +107,6 @@ function Canvas() {
   const clickHandler = (event) => {
     const coords = event.currentTarget.value;
     setCurrentCoords({x:coords[0],y:coords[1]});
-  }
-
-  function createMapButton(row_idx,col_idx,cell) {
-    let coords = '' + row_idx + col_idx;
-    let color = "blue";
-    if (cell === "selected"){
-      color = "green";
-    }
-    else if(cell.displayName){
-      color = "red";
-    }
-    return (
-      <Button
-          size='xs'
-          color={color}
-          key={coords}
-          value={coords}
-          onClick={clickHandler}
-          variant="filled">
-      </Button>
-    )
   }
 
   async function submitToDB(x,y,toSubmit){
@@ -276,7 +258,7 @@ function Canvas() {
       map = map_array.map((rows,row_idx)=>{
           let row = [];
           rows.map((cell,col_idx)=>{
-              row.push(createMapButton(row_idx,col_idx,cell));
+              row.push(MapButton(row_idx,col_idx,cell,clickHandler));
           })
           return row;
       });
@@ -287,7 +269,7 @@ function Canvas() {
             const y = change.doc.id[2];
             if (change.doc.data().displayName){
               map_array[x][y] = change.doc.data();
-              let changed_item = createMapButton(x,y,change.doc.data());
+              let changed_item = MapButton(x,y,change.doc.data(),clickHandler);
               map[x][y] = changed_item;
               setDropdown(map);
             }
@@ -326,7 +308,7 @@ function Canvas() {
   // showing currently selected coordinate
   useEffect(() =>{
     function changeColor(x,y){
-      let changed_item = createMapButton(x,y,"selected");
+      let changed_item = MapButton(x,y,"selected",clickHandler);
       dropdown[x][y] = changed_item;
       setDropdown(dropdown);
     }
@@ -431,6 +413,7 @@ function Canvas() {
                       ...DEFAULT_THEME.colors.red,
                       ...DEFAULT_THEME.colors.green,
                       ...DEFAULT_THEME.colors.cyan,
+                      ...DEFAULT_THEME.colors.grape,
                       ...DEFAULT_THEME.colors.blue,
                       ...DEFAULT_THEME.colors.yellow,
                       ...DEFAULT_THEME.colors.gray,
@@ -468,7 +451,11 @@ function Canvas() {
       <Grid.Col span={3}>
         <Paper shadow="xl" radius="md" p="md" withBorder>
           <form onSubmit={form.onSubmit((values)=> submitHandler(values))}>
-            <Text mb="md" weight={500}>enter information about your art</Text>
+            <Group spacing={10}>
+              <Text weight={500}>enter information about your art</Text>
+              
+
+            </Group>
             <TextInput
               mb="md"
               description="required"
@@ -477,9 +464,9 @@ function Canvas() {
               {...form.getInputProps('artName')}
             />
             <TextInput
-            label="display name"
+            label="artist"
             description="required"
-            placeholder="enter display name here!"
+            placeholder="enter artist name here!"
             {...form.getInputProps('displayName')}
             />
             <Textarea
@@ -490,15 +477,34 @@ function Canvas() {
               placeholder="leave a note here!"
               {...form.getInputProps('description', { type: 'Textarea' })}
             />
+            <Group spacing={5}>
             {currentCoords.x === -1 && currentCoords.y === -1 && <Text weight={500}>select your coordinates first!</Text>}
             {currentCoords.x !== -1 && currentCoords.y !== -1 && <Text weight={500}>current coordinates are x:{currentCoords.y},  y:{currentCoords.x}</Text>}
+            <Popover width={200} position="bottom" withArrow shadow="md" opened={openPopover}>
+                <Popover.Target>
+                  <ActionIcon variant='outline' size={'xs'} onMouseEnter={open} onMouseLeave={close}>
+                    <IconQuestionMark />
+                  </ActionIcon>
+                </Popover.Target>
+                <Popover.Dropdown sx={{ pointerEvents: 'none' }}>
+                  <Highlight highlightColor="red" highlight={[
+                    "tiles",
+                    "red"
+                  ]}>tiles with red are taken the darker the square the more images are on the tile</Highlight>
+                  <Highlight highlightColor="blue" highlight={[
+                    "tiles",
+                    "blue"
+                  ]}>tiles with blue are open</Highlight>
+                </Popover.Dropdown>
+              </Popover>
+              </Group>
             <br></br>
             <Stack spacing="sm">
               {/*TODO: fix this, does not appear on some screens */}
               <Button
                   variant='outline'
                   gradient={{ from: 'blue', to:'pink', deg:25}}
-                  onClick={() => {setOpened(true)}}
+                  onClick={() => {setOpenedModal(true)}}
                   >select coordinates
               </Button>
               <Button
@@ -513,16 +519,18 @@ function Canvas() {
         </Paper>
       </Grid.Col>
     </Grid>
+
     <Modal
-      opened={opened}
-      onClose={() => setOpened(false)}
+      opened={openedModal}
+      onClose={() => setOpenedModal(false)}
       title="select coordinate!"
     >
-        {currentCoords.x === -1 && currentCoords.y === -1 && <Text weight={500}>select your coordinates first!</Text>}
-        {currentCoords.x !== -1 && currentCoords.y !== -1 && <Text weight={500}>current coordinates are x:{currentCoords.y},  y:{currentCoords.x}</Text>}
-        <SimpleGrid cols={10}>
-          {dropdown}
-        </SimpleGrid>
+      
+      {currentCoords.x === -1 && currentCoords.y === -1 && <Text weight={500}>select your coordinates first!</Text>}
+      {currentCoords.x !== -1 && currentCoords.y !== -1 && <Text weight={500}>current coordinates are x:{currentCoords.y},  y:{currentCoords.x}</Text>}
+      <SimpleGrid cols={10}>
+        {dropdown}
+      </SimpleGrid>
     </Modal>
     </>
   );
