@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef }from 'react';
 import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
-import { Paper } from '@mantine/core';
+import { Button, Paper } from '@mantine/core';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDcsr-FDygOtD2VHPwqNY9wKmU_lMPIucQ",
@@ -18,6 +18,13 @@ const db = getFirestore(app);
 export default function Board() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
+  const buttonRef = useRef(null);
+  const [refresh,setRefresh] = useState(false);
+  function clickHandler(){
+    setRefresh(true);
+    buttonRef.current.loading = true;
+
+  }
 
   function drawImageOnCanvas(image,x,y){
     const canvas = canvasRef.current;
@@ -34,6 +41,7 @@ export default function Board() {
   useEffect(() =>{
     let unsubscribe;
     async function getMap(db){
+      console.log('loading the map')
       const canvas = canvasRef.current;
       canvas.width = "1750";
       canvas.height = "1750";
@@ -45,22 +53,32 @@ export default function Board() {
       const context = canvas.getContext('2d');
       context.scale(0.5,0.5);
       contextRef.current = context;
-     unsubscribe = onSnapshot(collection(db,"map"),(snapShot)=>{
-      snapShot.docChanges().forEach((change)=>{
-        const x = change.doc.id[0];
-        const y = change.doc.id[2];
-        const htmlImg = new Image(350,350);
-        htmlImg.src = change.doc.data().imagePNG;
-        drawImageOnCanvas(htmlImg,x,y);
-      })
-     }) 
+      unsubscribe = onSnapshot(collection(db,"map"),(snapShot)=>{
+        snapShot.docChanges().forEach((change)=>{
+          const x = change.doc.id[0];
+          const y = change.doc.id[2];
+          const htmlImg = new Image(350,350);
+          htmlImg.src = change.doc.data().imagePNG;
+          drawImageOnCanvas(htmlImg,x,y);
+        })
+      }) 
     }
 
     getMap(db);
-  },[]);
+    setRefresh(false);
+    return () => unsubscribe();
+  },[refresh]);
 
   return (
     <>
+    <Button
+    onClick={clickHandler}
+    ref={buttonRef}
+    variant='outline'
+    mb='md'
+    >
+      refresh the board
+    </Button>
     <Paper>
       <canvas
       ref = {canvasRef} 

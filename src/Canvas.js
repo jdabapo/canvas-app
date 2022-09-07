@@ -374,21 +374,20 @@ function Canvas() {
               />
               </Center>
               <Center>
-               
-                {/* TODO: Change this because it lags too much*/}
-                <Button styles={(theme) => ({
-                  root: {
-                    backgroundColor:color,
-                    '&:hover': {
-                      backgroundColor: theme.fn.darken(color, 0.05),
-                    },
-
-                  },
-
-                })} mr="md">current color</Button>
                 <Menu opened={openColors} onChange={setOpenColors}>
                   <Menu.Target>
-                    <Button> <Text weight={500}>select line color: </Text></Button>
+                    <Button
+                    styles={(theme) => ({
+                      root: {
+                        backgroundColor:color,
+                        '&:hover': {
+                          backgroundColor: theme.fn.darken(color, 0.05),
+                        },
+    
+                      },
+    
+                    })}
+                    > <Text weight={500}>select line color</Text></Button>
                   </Menu.Target>
                   <Menu.Dropdown>
                     <ColorPicker
@@ -413,9 +412,7 @@ function Canvas() {
 
                 <Button
                   m="md"
-                  variant='gradient'
                   onClick={clearCanvas}
-                  gradient={{from: 'blue', to:'black', deg:105}}
                 >
                   clear canvas
                 </Button>
@@ -496,7 +493,7 @@ function Canvas() {
                   >select coordinates
               </Button>
               <Button
-                variant='gradient'
+                variant='outline'
                 gradient={{from: 'blue', to:'pink', deg:5}}
                 type="submit"
               >

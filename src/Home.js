@@ -87,7 +87,7 @@ export default function Home(){
                         <Text>
                         see all prior art on the <Anchor href='/Map'>map</Anchor>
                         </Text>
-                <Button onClick={clickHandler}>
+                <Button onClick={clickHandler} variant='outline' mb='md'>
                     view more art
                 </Button>
             </Paper>
