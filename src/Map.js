@@ -123,7 +123,7 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             mapArray[x][y] = change.doc.data();
-                            MapButton(x,y,change.doc.data(),clickHandler);
+                            // MapButton(x,y,change.doc.data(),clickHandler);
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
                                 // TODO: use setDisplay image here IF current item changes, should change what is being shown
@@ -145,7 +145,7 @@ function Map(){
                         // update the item list at that coordinate
                         mapArray[x][y] = change.doc.data();
                         // console.log(x,y," added item @ map array data:",mapArray[x][y]);
-                        MapButton(x,y,change.doc.data(),clickHandler);
+                        // MapButton(x,y,change.doc.data(),clickHandler);
                         if (currentCoords.x === x && currentCoords.y === y){
                             // TODO: add something here to make like transition?
                             // TODO: use setDisplay image here

@@ -27,7 +27,7 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
     const [downvotes, downvoteinc] = useCounter(tmp_downvotes, { min: 0 });
     const [upvotes,upvoteinc] = useCounter(tmp_upvotes, { min: 0 });
     function reportHandler(){
-        console.log('report open modal');
+        // TODO: edit this
         openModal({
             title: 'what was wrong with this artwork?',
             children: (
