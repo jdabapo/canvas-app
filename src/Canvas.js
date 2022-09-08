@@ -249,7 +249,7 @@ function Canvas() {
       map = mapArray.map((rows,row_idx)=>{
           let row = [];
           rows.map((cell,col_idx)=>{
-              row.push(MapButton(row_idx,col_idx,cell,clickHandler));
+              row.push(MapButton(row_idx,col_idx,cell,clickHandler,'xs'));
           })
           return row;
       });
@@ -260,7 +260,7 @@ function Canvas() {
             const y = change.doc.id[2];
             if (change.doc.data().displayName){
               mapArray[x][y] = change.doc.data();
-              let changed_item = MapButton(x,y,change.doc.data(),clickHandler);
+              let changed_item = MapButton(x,y,change.doc.data(),clickHandler,'xs');
               map[x][y] = changed_item;
               setDropdown(map);
             }
