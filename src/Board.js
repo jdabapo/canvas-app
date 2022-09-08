@@ -41,7 +41,6 @@ export default function Board() {
   useEffect(() =>{
     let unsubscribe;
     async function getMap(db){
-      console.log('loading the map')
       const canvas = canvasRef.current;
       canvas.width = "1750";
       canvas.height = "1750";

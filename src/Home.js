@@ -14,7 +14,6 @@ export default function Home(){
     const [displayImage,setDisplayImage] = useState(null);
     const [items,setItems] = useState([]);
     const clickHandler = () =>{
-        console.log(items);
         let selected = items.sort(() => Math.random() - Math.random()).slice(0, 5);
         setImages(selected);
     }

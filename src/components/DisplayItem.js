@@ -6,11 +6,77 @@ import {
     Group,
     Text,
     Badge,
-    Button
+    Button,
+    TextInput,
+    ActionIcon
 } from '@mantine/core';
+import { openModal, closeAllModals } from '@mantine/modals';
+import {Link} from 'react-router-dom';
+import * as firebase from '../utils/Firebase';
+import { IconThumbUp, IconThumbDown, IconAlertTriangle } from '@tabler/icons';
+import { doc, getDoc, increment, updateDoc } from 'firebase/firestore';
+import { useCounter } from '@mantine/hooks';
+const db = firebase.db;
+
 
 function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
     // change image to the biggest image size
+    const key = '' + currentCoords.y +'.'+ currentCoords.x;
+    let tmp_downvotes = tmp.downvotes ? tmp.downvotes : 0;
+    let tmp_upvotes = tmp.upvotes ? tmp.upvotes : 0;
+    const [downvotes, downvoteinc] = useCounter(tmp_downvotes, { min: 0 });
+    const [upvotes,upvoteinc] = useCounter(tmp_upvotes, { min: 0 });
+    function reportHandler(){
+        console.log('report open modal');
+        openModal({
+            title: 'what was wrong with this artwork?',
+            children: (
+              <>
+                <TextInput label="report " placeholder="report " data-autofocus />
+                <Button fullWidth onClick={closeAllModals} mt="md">
+                  Submit
+                </Button>
+              </>
+            ),
+          });
+    }
+    // increment upvote by 1
+    // give notification too
+    async function upvoteHandler(){
+        console.log(currentCoords.x,currentCoords.y);
+        const artDoc = doc(db,"map",key);
+        const artDocSnap = await getDoc(artDoc);
+        upvoteinc.increment();
+        if(artDocSnap.data().upvotes !== undefined){
+            await updateDoc(artDoc,{
+                upvotes:increment(1)
+            });
+        }
+        else{
+            await updateDoc(artDoc,{
+                upvotes:1
+            });
+        }
+    }
+
+    async function downvoteHandler(){
+        console.log(key);
+        console.log(currentCoords.x,currentCoords.y);
+        const artDoc = doc(db,"map",key);
+        const artDocSnap = await getDoc(artDoc);
+        downvoteinc.increment();
+        if(artDocSnap.data().downvotes !== undefined){
+            await updateDoc(artDoc,{
+                downvotes:increment(1)
+            });
+        }
+        else{
+            await updateDoc(artDoc,{
+                downvotes:1
+            });
+        }
+    }
+    let ratingString = <Group><IconThumbUp/><Text>{upvotes}</Text><IconThumbDown/><Text>{downvotes}</Text></Group>;
     if(!tmp.description){
         tmp.description = "the author did not write anything for this art..."
     }
@@ -34,10 +100,25 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
                     <Badge color="pink" variant="light">
                         {d ? d.toLocaleString(): "no time yet"}
                     </Badge>
+                    {ratingString}
                 </Group>
                 <Text size="sm" color="dimmed">
                     {tmp.description}
                 </Text>
+                {currentCoords.x !== -1 &&
+                    <Group>
+                        <Button m={2} component={Link} to="/Canvas" state={{coords:currentCoords}}variant='outline'>put your art here at {currentCoords.x},{currentCoords.y}</Button>
+                        <ActionIcon m={2} variant='outline' color='red' size="lg" onClick={reportHandler}>
+                            <IconAlertTriangle/>
+                        </ActionIcon>
+                        <ActionIcon m={2} color="green" variant="outline" size="lg" onClick={upvoteHandler}>
+                            <IconThumbUp/>
+                        </ActionIcon>
+                        <ActionIcon m={2} color="red" variant="outline" size="lg" onClick={downvoteHandler}>
+                            <IconThumbDown/>
+                        </ActionIcon>               
+                    </Group>
+                }
             </Card>
     );
 }

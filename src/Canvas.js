@@ -26,9 +26,9 @@ import { useForm } from '@mantine/form';
 import { useOs, useDisclosure } from '@mantine/hooks';
 import { doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
-import { IconCheck } from '@tabler/icons';
+import { IconCheck, IconQuestionMark } from '@tabler/icons';
 import { openModal } from '@mantine/modals';
-import { IconQuestionMark } from '@tabler/icons';
+import { useLocation } from 'react-router-dom';
 import * as firebase from './utils/Firebase';
 
 const app = firebase.app;
@@ -43,7 +43,7 @@ function Canvas() {
     timeEpoch:''
   }
   const mapArray = new Array(10).fill(placeholderItem).map(() => new Array(10).fill(placeholderItem));
-  
+  const clickedCoords = useLocation();
   const form = useForm({
     initialValues: {
       displayName: '',
@@ -134,6 +134,8 @@ function Canvas() {
         displayName: toSubmit.displayName,
         imagePNG: toSubmit.imagePNG,
         timeEpoch: toSubmit.timeEpoch,
+        upvotes:toSubmit.upvotes,
+        downvotes:toSubmit.downvotes,
       });
     }
     else{
@@ -189,6 +191,8 @@ function Canvas() {
       description:values.description,
       timeEpoch:Date.now(),
       imagePNG:img,
+      upvotes:0,
+      downvotes:0
     };
     showNotification({
       id: 'load-data',
@@ -267,11 +271,16 @@ function Canvas() {
     return () => unsubscribe();
   },[])
 
-  // set up the canvas
+  // set up the canvas and current coords if necessary
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
     // TODO: Fix this width && Fix for mobile
-    
+    console.log(clickedCoords.state)
+    if(clickedCoords.state && clickedCoords.state.coords){
+      let x = clickedCoords.state.coords.y;
+      let y = clickedCoords.state.coords.x;
+      setCurrentCoords({x,y});
+    }
     const canvas = canvasRef.current;
     canvas.width = "300";
     canvas.height = "300";
@@ -424,10 +433,11 @@ function Canvas() {
                 onChange={setLineWidth}
                 label="select line width"
               >
-                <Radio value="2" label="small" />
-                <Radio value="5" label="medium" />
-                <Radio value="10" label="large" />
-                <Radio value="15" label="xtra large" />
+                <Radio value="2" label="sm" />
+                <Radio value="5" label="md" />
+                <Radio value="10" label="lg" />
+                <Radio value="15" label="xl" />
+                <Radio value="50" label="really big" />
               </Radio.Group>
               </Center>
             </Paper>

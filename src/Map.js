@@ -62,8 +62,8 @@ function Map(){
                 d = new Date(0);
                 d.setUTCMilliseconds(image.timeEpoch);
                 allDisplay.unshift(
-                    <Carousel.Slide>
-                        <DisplayItem key={tmpFix} d={d} text={imageText} tmp={image} currentCoords={currentCoords}/>
+                    <Carousel.Slide key={tmpFix}>
+                        <DisplayItem  d={d} text={imageText} tmp={image} currentCoords={currentCoords}/>
                     </Carousel.Slide>
                 );
                 tmpFix += 1;
@@ -73,15 +73,12 @@ function Map(){
             d = new Date(0);
             d.setUTCMilliseconds(currentItem.timeEpoch);
             allDisplay.unshift(
-                <Carousel.Slide>
-                    <DisplayItem key={tmpFix} d={d} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>
+                <Carousel.Slide key={tmpFix}>
+                    <DisplayItem  d={d} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>
                 </Carousel.Slide>
             );
             setDisplayImage(
-                <Carousel
-                withIndicators
-
-                >
+                <Carousel>
                     {allDisplay}
                 </Carousel>
                 );
@@ -107,7 +104,7 @@ function Map(){
                 setCurrentCoords({x,y})
                 setCurrentItem(mapArray[y][x]);
                 let tmpList = [];
-                console.log("click",itemList)
+                // console.log("click",itemList)
                 // TODO: problem is itemList is not being updated before the clickhandler fires
                 // itemList.forEach(inner => {
                 //     console.log(inner);
@@ -126,12 +123,6 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             mapArray[x][y] = change.doc.data();
-                            showNotification({
-                                id:'new-item',
-                                loading:false,
-                                title:`${change.doc.data().displayName} added a new image at (${x},${y})`,
-                                autoClose:3600,
-                            })
                             MapButton(x,y,change.doc.data(),clickHandler);
                             if (currentCoords.x === x && currentCoords.y === y){
                                 // TODO: add something here to make like transition?
@@ -140,11 +131,17 @@ function Map(){
                                 // update current item
                                 setCurrentItem(mapArray[x][y]);
                                 let imageText = `${currentItem.artName} by ${currentItem.displayName}`;
-                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={imageText} tmp={currentItem} currentCoords={currentCoords}/>)
+                                setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={imageText} tmp={change.doc.data()} currentCoords={currentCoords}/>)
                             }
                         }
                     }
-                    if (change.type === "added") {
+                    if (change.type === "added" || change.type === "removed") {
+                        showNotification({
+                            id:'new-item',
+                            loading:false,
+                            title:`${change.doc.data().displayName} added a new image at (${y},${x})`,
+                            autoClose:3600,
+                        })
                         // update the item list at that coordinate
                         mapArray[x][y] = change.doc.data();
                         // console.log(x,y," added item @ map array data:",mapArray[x][y]);
