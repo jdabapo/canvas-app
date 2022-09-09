@@ -19,11 +19,14 @@ export default function Board() {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const buttonRef = useRef(null);
-  const [refresh,setRefresh] = useState(false);
-  function clickHandler(){
-    setRefresh(true);
-    buttonRef.current.loading = true;
+  const [images,setImages] = useState([]);
 
+  function clickHandler(){
+    console.log('clicked')
+    for(let i = 0; i < images.length;i++){
+      console.log('drawing',images[i].htmlImg.alt)
+      drawImageOnCanvas(images[i].htmlImg,images[i].x,images[i].y);
+    }
   }
 
   function drawImageOnCanvas(image,x,y){
@@ -53,20 +56,25 @@ export default function Board() {
       context.scale(0.5,0.5);
       contextRef.current = context;
       unsubscribe = onSnapshot(collection(db,"map"),(snapShot)=>{
+        let items = [];
         snapShot.docChanges().forEach((change)=>{
           const x = change.doc.id[0];
           const y = change.doc.id[2];
           const htmlImg = new Image(350,350);
           htmlImg.src = change.doc.data().imagePNG;
+          htmlImg.alt = change.doc.data().artName;
           drawImageOnCanvas(htmlImg,x,y);
+          items.push({htmlImg:htmlImg,x:x,y:y});
+          setImages(items);
         })
-      }) 
+      })
     }
 
-    getMap(db);
-    setRefresh(false);
+    getMap(db).then(
+      console.log(images)
+    );
     return () => unsubscribe();
-  },[refresh]);
+  },[]);
 
   return (
     <>
