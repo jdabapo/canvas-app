@@ -22,6 +22,7 @@ import {
   Group
   } from '@mantine/core';
 import MapButton from './components/MapButton';
+import { enableUndo } from 'undo-canvas';
 import { useForm } from '@mantine/form';
 import { useOs, useDisclosure } from '@mantine/hooks';
 import { doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
@@ -96,6 +97,18 @@ function Canvas() {
   const clickHandler = (event) => {
     const coords = event.currentTarget.value;
     setCurrentCoords({x:coords[0],y:coords[1]});
+  }
+
+  const redoHandler = () =>{
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    context.redoTag()
+  }
+
+  const undoHandler = () =>{
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    context.undoTag()
   }
 
   async function submitToDB(x,y,toSubmit){
@@ -295,6 +308,7 @@ function Canvas() {
     context.strokeStyle = color;
     contextRef.current = context;
 
+    enableUndo(context);
     if (os === 'ios'){
       window.addEventListener("touchstart",startDrawing);
       canvas.style["touch-action"] = "none";
@@ -326,6 +340,7 @@ function Canvas() {
   // drawing functions
   const startDrawing = ({nativeEvent}) =>{
     contextRef.current.beginPath();
+    contextRef.current.putTag();
     if(os === 'ios' || os === 'android'){
       if (nativeEvent && nativeEvent.touches){
         const clientX = nativeEvent.touches[0].clientX;
@@ -343,6 +358,7 @@ function Canvas() {
   
   const endDrawing = () => {
     contextRef.current.closePath();
+    contextRef.current.putTag();
     setIsDrawing(false);
   }
   
@@ -370,7 +386,8 @@ function Canvas() {
       {/* Canvas */}
       <Grid.Col span={3}>
             <Paper shadow="xl" radius="md" p="md" withBorder>
-              <Center>
+              <Center
+              mb={3}>
               <canvas
                 onMouseDown={startDrawing}
                 onMouseUp={endDrawing}
@@ -386,6 +403,7 @@ function Canvas() {
                 <Menu opened={openColors} onChange={setOpenColors}>
                   <Menu.Target>
                     <Button
+                    mr={5}
                     styles={(theme) => ({
                       root: {
                         backgroundColor:color,
@@ -417,14 +435,31 @@ function Canvas() {
                   />
                   </Menu.Dropdown>
                 </Menu>
-                
-
-                <Button
-                  m="md"
-                  onClick={clearCanvas}
-                >
+                <Button.Group>
+                  <Button
+                    onClick={undoHandler}
+                    variant='outline'
+                    color="orange"
+                    mr={3}
+                  >
+                    undo
+                  </Button>
+                  <Button
+                    onClick={redoHandler}
+                    variant='outline'
+                    color="green"
+                    mr={3}
+                  >
+                    redo
+                  </Button>
+                  <Button
+                    onClick={clearCanvas}
+                    variant='outline'
+                    color="red"
+                  >
                   clear canvas
                 </Button>
+                </Button.Group>
               </Center>
               <Center>
               <Radio.Group
