@@ -8,7 +8,8 @@ import {
     Badge,
     Button,
     TextInput,
-    ActionIcon
+    ActionIcon,
+    Center
 } from '@mantine/core';
 import { openModal, closeAllModals } from '@mantine/modals';
 import {Link} from 'react-router-dom';
@@ -22,10 +23,8 @@ const db = firebase.db;
 function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
     // change image to the biggest image size
     const key = '' + currentCoords.y +'.'+ currentCoords.x;
-    let tmp_downvotes = tmp.downvotes ? tmp.downvotes : 0;
-    let tmp_upvotes = tmp.upvotes ? tmp.upvotes : 0;
-    const [downvotes, downvoteinc] = useCounter(tmp_downvotes, { min: 0 });
-    const [upvotes,upvoteinc] = useCounter(tmp_upvotes, { min: 0 });
+    const [downvotes, downvoteinc] = useCounter(tmp.downvotes, { min: 0 });
+    const [upvotes,upvoteinc] = useCounter(tmp.upvotes, { min: 0 });
     function reportHandler(){
         // TODO: edit this
         openModal({
@@ -85,6 +84,7 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
     }
     return(
             <Card shadow="sm" radius="md" withBorder>
+                <Center>
                 <Card.Section>
                     <Image
                         src={tmp.imagePNG}
@@ -93,6 +93,7 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
                         alt={tmp.artName}
                     />
                 </Card.Section>
+                </Center>
                 <Group position="apart" mt="md" mb="xs">
                     <Text weight={500}>
                         {text}
@@ -102,7 +103,7 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
                     </Badge>
                     {ratingString}
                 </Group>
-                <Text size="sm" color="dimmed">
+                <Text size="sm" color="dimmed"  lineClamp={5}>
                     {tmp.description}
                 </Text>
                 {currentCoords.x !== -1 &&

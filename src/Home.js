@@ -60,6 +60,7 @@ export default function Home(){
         setDisplayImage(
             <Carousel
             slideSize="70%"  slideGap="md" 
+            loop
             >
                 {allDisplay}
             </Carousel>

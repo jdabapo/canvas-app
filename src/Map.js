@@ -25,6 +25,7 @@ function Map(){
     // array should be 10x10 (0-9)
     const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
     const [itemList,setItemList] = useState([]);
+    const [images,setImages] = useState([]);
     const [currentItem,setCurrentItem] = useState({});
     const [displayImage,setDisplayImage] = useState(null);
 

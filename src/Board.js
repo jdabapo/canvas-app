@@ -22,9 +22,7 @@ export default function Board() {
   const [images,setImages] = useState([]);
 
   function clickHandler(){
-    console.log('clicked')
     for(let i = 0; i < images.length;i++){
-      console.log('drawing',images[i].htmlImg.alt)
       drawImageOnCanvas(images[i].htmlImg,images[i].x,images[i].y);
     }
   }
