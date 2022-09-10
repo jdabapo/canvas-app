@@ -24,10 +24,10 @@ import {
 import MapButton from './components/MapButton';
 import { enableUndo } from 'undo-canvas';
 import { useForm } from '@mantine/form';
-import { useOs, useDisclosure } from '@mantine/hooks';
+import { useOs, useDisclosure, useToggle } from '@mantine/hooks';
 import { doc, setDoc, getDoc, onSnapshot, collection, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 import { showNotification, updateNotification } from '@mantine/notifications';
-import { IconCheck, IconQuestionMark } from '@tabler/icons';
+import { IconCheck, IconQuestionMark, IconArrowBackUp, IconArrowForwardUp, IconEraser, IconPencil, IconPalette, IconClearAll, IconTrash, IconColorPicker } from '@tabler/icons';
 import { openModal } from '@mantine/modals';
 import { useLocation } from 'react-router-dom';
 import * as firebase from './utils/Firebase';
@@ -64,6 +64,8 @@ function Canvas() {
   const [openedModal,setOpenedModal] = useState(false);
   const [openColors,setOpenColors] = useState(false);
   const [openPopover, { close, open }] = useDisclosure(false);
+  const [draw_erase, toggle] = useToggle(['draw', 'erase']);
+
   const os = useOs();
   // TODO: Make the text work
   // TODO: Make modal open when art is submitted
@@ -334,23 +336,29 @@ function Canvas() {
     const context = canvas.getContext('2d');
     context.lineCap = "round";
     context.lineWidth = lineWidth;
-    context.strokeStyle = color;
-  },[color,lineWidth])
+    if(draw_erase === "draw"){
+      context.strokeStyle = color;
+    }
+    else{
+      context.strokeStyle = "#FFFFFF";
+    }
+  },[color,lineWidth,draw_erase])
 
   // drawing functions
   const startDrawing = ({nativeEvent}) =>{
     contextRef.current.beginPath();
-    contextRef.current.putTag();
     if(os === 'ios' || os === 'android'){
       if (nativeEvent && nativeEvent.touches){
         const clientX = nativeEvent.touches[0].clientX;
         const clientY = nativeEvent.touches[0].clientY;
         const { cx, cy } = computePointInCanvas(clientX,clientY);
+        contextRef.current.putTag();
         contextRef.current.moveTo(cx, cy);
       }
     }
     else{
       const { x, y } = computePointInCanvas(nativeEvent.x,nativeEvent.y);
+      contextRef.current.putTag();
       contextRef.current.moveTo(x,y);
     }
     setIsDrawing(true);
@@ -404,6 +412,7 @@ function Canvas() {
                   <Menu.Target>
                     <Button
                     mr={5}
+                    size='xs'
                     styles={(theme) => ({
                       root: {
                         backgroundColor:color,
@@ -435,31 +444,39 @@ function Canvas() {
                   />
                   </Menu.Dropdown>
                 </Menu>
-                <Button.Group>
-                  <Button
+                  <ActionIcon
+                    onClick={()=>toggle()}
+                    variant='filled'
+                    color="gray"
+                    mr={3}
+                  >
+                    {draw_erase === "draw" && <IconPencil/>}
+                    {draw_erase === "erase" && <IconEraser/>}
+                  </ActionIcon>
+                  <ActionIcon
                     onClick={undoHandler}
                     variant='outline'
                     color="orange"
                     mr={3}
                   >
-                    undo
-                  </Button>
-                  <Button
+                    <IconArrowBackUp/>
+                  </ActionIcon>
+                  <ActionIcon
                     onClick={redoHandler}
                     variant='outline'
                     color="green"
                     mr={3}
                   >
-                    redo
-                  </Button>
-                  <Button
+                    <IconArrowForwardUp/>
+                  </ActionIcon>
+                  <ActionIcon
                     onClick={clearCanvas}
                     variant='outline'
                     color="red"
+                    mr={3}
                   >
-                  clear canvas
-                </Button>
-                </Button.Group>
+                    <IconTrash/>
+                  </ActionIcon>
               </Center>
               <Center>
               <Radio.Group
