@@ -75,12 +75,23 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
             });
         }
     }
-    let ratingString = <Group><IconThumbUp/><Text>{upvotes}</Text><IconThumbDown/><Text>{downvotes}</Text></Group>;
+    let ratingString = <Group>
+                            <ActionIcon  color="green" variant="outline" size="lg" onClick={upvoteHandler}>
+                                <IconThumbUp/>
+                            </ActionIcon><Text>{upvotes}</Text>
+                            <ActionIcon color="red" variant="outline" size="lg" onClick={downvoteHandler}>
+                                <IconThumbDown/>
+                            </ActionIcon>     
+                            <Text>{downvotes}</Text>
+                        </Group>;
     if(!tmp.description){
         tmp.description = "the author did not write anything for this art..."
     }
     else if(!d || d.toLocaleString() === 'Invalid Date'){
         d = "no time yet...";
+    }
+    if(!text){
+        text = "there is no art here..."
     }
     return(
             <Card shadow="sm" radius="md" withBorder>
@@ -108,16 +119,10 @@ function DisplayItem({d, text, tmp, currentCoords={x:-1,y:-1}}){
                 </Text>
                 {currentCoords.x !== -1 &&
                     <Group>
-                        <Button m={2} component={Link} to="/Canvas" state={{coords:currentCoords}}variant='outline'>put your art here at {currentCoords.x},{currentCoords.y}</Button>
-                        <ActionIcon m={2} variant='outline' color='red' size="lg" onClick={reportHandler}>
+                        <Button component={Link} to="/Canvas" state={{coords:currentCoords}}variant='outline'>put your art here at {currentCoords.x},{currentCoords.y}</Button>
+                        <ActionIcon  variant='outline' color='red' size="lg" onClick={reportHandler}>
                             <IconAlertTriangle/>
-                        </ActionIcon>
-                        <ActionIcon m={2} color="green" variant="outline" size="lg" onClick={upvoteHandler}>
-                            <IconThumbUp/>
-                        </ActionIcon>
-                        <ActionIcon m={2} color="red" variant="outline" size="lg" onClick={downvoteHandler}>
-                            <IconThumbDown/>
-                        </ActionIcon>               
+                        </ActionIcon>         
                     </Group>
                 }
             </Card>

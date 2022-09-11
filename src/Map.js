@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SimpleGrid,
          Grid,
          Paper,
-         Center, 
+         Center,
+         Image, 
         } from '@mantine/core';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { Carousel } from '@mantine/carousel';
@@ -19,24 +20,58 @@ const placeholderItem = {
     displayName:'',
     timeEpoch:'',
 }    
-
+const noitem = "/noitem.jpg";
 const mapArray = new Array(10).fill(placeholderItem).map(() => new Array(10).fill(placeholderItem));
 function Map(){
     // array should be 10x10 (0-9)
     const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
+    const [priorCoords,setPriorCoords] = useState({x:-1,y:-1});
     const [itemList,setItemList] = useState([]);
-    const [images,setImages] = useState([]);
     const [currentItem,setCurrentItem] = useState({});
     const [displayImage,setDisplayImage] = useState(null);
+    const rootRefs = useRef(new Array(10).fill(null).map(()=> new Array(10).fill(null)));
+    const imageRefs = useRef(new Array(10).fill(null).map(()=> new Array(10).fill(null)));
 
+    const mouseEnterHandler = (event) =>{
+        // const coords = event.currentTarget.value;
+        const coords = event.currentTarget.id;
+        const x = Number(coords[2]);
+        const y = Number(coords[0]);
+        imageRefs.current[y][x].style.border = "5px solid black";
+    }
 
+    const mouseLeaveHandler = (event) =>{
+        const coords = event.currentTarget.id;
+        const x = Number(coords[2]);
+        const y = Number(coords[0]);
+        imageRefs.current[y][x].style.border = "0px solid black";
+    }
+
+    const clickHandler = (event) =>{
+        const coords = event.currentTarget.id;
+        const x = Number(coords[2]);
+        const y = Number(coords[0]);
+        setCurrentCoords({x,y})
+        setCurrentItem(mapArray[y][x]);
+        imageRefs.current[y][x].src = "/select.png";
+    }
+    
     // whenever a different is clicked
-    // TODO: Fix carousel bc images just keep getting bigger
     useEffect(()=>{
         // pass the currentItem props to the thing
-        let noitem = "https://media.istockphoto.com/photos/empty-pedestal-inside-exhibition-gallery-picture-id1271894342?k=20&m=1271894342&s=170667a&w=0&h=4Cy45Werofk-XvvjgxU_dYgoQgXRawE_TEEn3BsVbx0=";
+        if(priorCoords.x === -1){
+            setPriorCoords(currentCoords);
+        }
+        else{
+            let img = noitem;
+            if(mapArray[priorCoords.y][priorCoords.x].displayName){
+                img = mapArray[priorCoords.y][priorCoords.x].imagePNG;
+            }
+            imageRefs.current[priorCoords.y][priorCoords.x].src = img;
+            setPriorCoords(currentCoords);
+        }
         let tmp = {
-            imagePNG:"https://consciouscat.net/wp-content/uploads/2012/11/cat-immune-system-e1587891908928.jpg",
+            imagePNG:"/cat.jpg",
             artName:"cute cat",
             displayName:"jeremy",
             timeEpoch:"earlier today",
@@ -98,23 +133,6 @@ function Map(){
     useEffect(()=>{
         let unsubscribe;
         async function getMap(db){
-            const clickHandler = (event) =>{
-                const coords = event.currentTarget.value;
-                const x = Number(coords[1]);
-                const y = Number(coords[0]);
-                setCurrentCoords({x,y})
-                setCurrentItem(mapArray[y][x]);
-                let tmpList = [];
-                // console.log("click",itemList)
-                // TODO: problem is itemList is not being updated before the clickhandler fires
-                // itemList.forEach(inner => {
-                //     console.log(inner);
-                //     tmpList.push(inner.slice())
-                //     console.log(tmpList);
-                // });
-                // tmpList[y][x] = <div>fjj</div>
-                // setItemList(tmpList)
-            }
             // set up the listener
             unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
                 querySnapshot.docChanges().forEach((change)=>{
@@ -124,12 +142,7 @@ function Map(){
                         // update the item list at that coordinate
                         if (change.doc.data().displayName){
                             mapArray[x][y] = change.doc.data();
-                            // MapButton(x,y,change.doc.data(),clickHandler);
                             if (currentCoords.x === x && currentCoords.y === y){
-                                // TODO: add something here to make like transition?
-                                // TODO: use setDisplay image here IF current item changes, should change what is being shown
-                                // maybe keep a small log of last X pictures?
-                                // update current item
                                 setCurrentItem(mapArray[x][y]);
                                 let imageText = `${currentItem.artName} by ${currentItem.displayName}`;
                                 setDisplayImage(<DisplayItem d={currentItem.timeEpoch} text={imageText} tmp={change.doc.data()} currentCoords={currentCoords}/>)
@@ -145,11 +158,7 @@ function Map(){
                         })
                         // update the item list at that coordinate
                         mapArray[x][y] = change.doc.data();
-                        // console.log(x,y," added item @ map array data:",mapArray[x][y]);
-                        // MapButton(x,y,change.doc.data(),clickHandler);
                         if (currentCoords.x === x && currentCoords.y === y){
-                            // TODO: add something here to make like transition?
-                            // TODO: use setDisplay image here
                             // maybe keep a small log of last X pictures?
                             // update current item
                             setCurrentItem(mapArray[x][y]);
@@ -163,14 +172,34 @@ function Map(){
                 item_list = mapArray.map((rows,row_idx)=>{
                     let tmp = [];
                     rows.map((cell,col_idx)=>{
-                        tmp.push(MapButton(row_idx,col_idx,cell,clickHandler));
-                    })
+                        let key = ''+row_idx+'.'+col_idx;
+                        let img;
+                        if(!cell.imagePNG){
+                            img = noitem;
+                        }
+                        else{
+                            img = cell.imagePNG;
+                        }
+                        tmp.push(
+                        <Image
+                            key={key}
+                            width={36}
+                            height={36}
+                            onClick={clickHandler}
+                            onMouseEnter={mouseEnterHandler}
+                            onMouseLeave={mouseLeaveHandler}
+                            id={key}
+                            src={img}
+                            ref={el => rootRefs.current[row_idx][col_idx] = el}
+                            imageRef={el => imageRefs.current[row_idx][col_idx] = el}
+                        />);
+                    });
                     return tmp;
                 })
                 setItemList(item_list);
             });
         };
-        getMap(db).then(console.log('Map has been loaded')).then(console.log(itemList));
+        getMap(db);
         return () => unsubscribe();
     },[]);
 
