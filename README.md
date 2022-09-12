@@ -4,7 +4,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 This project uses Mantine UI for UI components, Firebase for data retrieval and HTML Canvas.
 
 ## How to use
-Draw on the website images 
+Draw on the website images on the canvas page. To view the images, go to either the board or map feature.
 
 ## Available Scripts
 
