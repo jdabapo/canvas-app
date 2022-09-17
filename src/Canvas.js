@@ -54,17 +54,21 @@ function Canvas() {
       y:-1,
     },
   });
+  const noitem = "/noitem.jpg";
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const [lineWidth,setLineWidth] = useState('5');
   const [isDrawing,setIsDrawing] = useState(false);
   const [color,setColor] = useState('#CC0000');
   const [currentCoords,setCurrentCoords] = useState({x:-1,y:-1});
+  const [priorCoords,setPriorCoords] = useState({x:-1,y:-1});
   const [dropdown,setDropdown] = useState([]);
   const [openedModal,setOpenedModal] = useState(false);
   const [openColors,setOpenColors] = useState(false);
   const [openPopover, { close, open }] = useDisclosure(false);
   const [draw_erase, toggle] = useToggle(['draw', 'erase']);
+  const rootRefs = useRef(new Array(10).fill(null).map(()=> new Array(10).fill(null)));
+  const imageRefs = useRef(new Array(10).fill(null).map(()=> new Array(10).fill(null)));
 
   const os = useOs();
   // TODO: Make the text work
@@ -96,10 +100,29 @@ function Canvas() {
     });
   }
 
-  const clickHandler = (event) => {
-    const coords = event.currentTarget.value;
-    setCurrentCoords({x:coords[0],y:coords[1]});
-  }
+  const mouseEnterHandler = (event) =>{
+    // const coords = event.currentTarget.value;
+    const coords = event.currentTarget.id;
+    const x = Number(coords[2]);
+    const y = Number(coords[0]);
+    imageRefs.current[y][x].style.border = "5px solid black";
+}
+
+const mouseLeaveHandler = (event) =>{
+    const coords = event.currentTarget.id;
+    const x = Number(coords[2]);
+    const y = Number(coords[0]);
+    imageRefs.current[y][x].style.border = "0px solid black";
+}
+
+const mapClickHandler = (event) =>{
+    const coords = event.currentTarget.id;
+    const x = Number(coords[2]);
+    const y = Number(coords[0]);
+    setCurrentCoords({x,y})
+}
+
+
 
   const redoHandler = () =>{
     const canvas = canvasRef.current;
@@ -260,28 +283,42 @@ function Canvas() {
       // set up the listener
       // start the initial item list
       // every button should be blue
-      let map;
-      map = mapArray.map((rows,row_idx)=>{
-          let row = [];
-          rows.map((cell,col_idx)=>{
-              row.push(MapButton(row_idx,col_idx,cell,clickHandler,'xs'));
-          })
-          return row;
-      });
-      setDropdown(map);
       unsubscribe = onSnapshot(collection(db, "map"),(querySnapshot)=>{
-          querySnapshot.docChanges().forEach((change)=>{
+        querySnapshot.docChanges().forEach((change)=>{
             const x = change.doc.id[0];
             const y = change.doc.id[2];
-            if (change.doc.data().displayName){
-              mapArray[x][y] = change.doc.data();
-              let changed_item = MapButton(x,y,change.doc.data(),clickHandler,'xs');
-              map[x][y] = changed_item;
-              setDropdown(map);
-            }
-          })
-      });
-    };
+            mapArray[x][y] = change.doc.data();
+        });
+      let item_list;
+      item_list = mapArray.map((rows,row_idx)=>{
+          let tmp = [];
+          rows.map((cell,col_idx)=>{
+              let key = ''+row_idx+'.'+col_idx;
+              let img;
+              if(!cell.imagePNG){
+                  img = noitem;
+              }
+              else{
+                  img = cell.imagePNG;
+              }
+              tmp.push(
+              <Image
+                  key={key}
+                  width={29}
+                  height={29}
+                  onClick={mapClickHandler}
+                  onMouseEnter={mouseEnterHandler}
+                  onMouseLeave={mouseLeaveHandler}
+                  id={key}
+                  src={img}
+                  ref={el => rootRefs.current[row_idx][col_idx] = el}
+                  imageRef={el => imageRefs.current[row_idx][col_idx] = el}
+              />);
+          });
+          return tmp;
+      })
+      setDropdown(item_list);
+    })};
     getMap(db);
     return () => unsubscribe();
   },[])
@@ -289,8 +326,6 @@ function Canvas() {
   // set up the canvas and current coords if necessary
   useEffect(() =>{
     // load the canvas initially, make it size of screen width
-    // TODO: Fix this width && Fix for mobile
-    console.log(clickedCoords.state)
     if(clickedCoords.state && clickedCoords.state.coords){
       let x = clickedCoords.state.coords.y;
       let y = clickedCoords.state.coords.x;
@@ -317,18 +352,11 @@ function Canvas() {
     }
   },[])
 
-  // showing currently selected coordinate
-  // TODO: FIX THIS, THIS MAKES THE SQUARE GREEN AFTER
-  // useEffect(() =>{
-  //   function changeColor(x,y){
-  //     let changed_item = MapButton(x,y,"selected",clickHandler);
-  //     dropdown[x][y] = changed_item;
-  //     setDropdown(dropdown);
-  //   }
-  //   if(currentCoords.x !== -1 || currentCoords.y !== -1){
-  //     changeColor(currentCoords.x,currentCoords.y);
-  //   }
-  // },[currentCoords.x,currentCoords.y]);
+  useEffect(()=>{
+    if(priorCoords.x === -1){
+      setPriorCoords(currentCoords);
+    }
+  },[currentCoords.x,currentCoords.y]);
 
   // when color or linewidth changes
   useEffect(() =>{

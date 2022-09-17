@@ -9,7 +9,6 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { Carousel } from '@mantine/carousel';
 import { showNotification } from '@mantine/notifications';
 import DisplayItem from './components/DisplayItem';
-import MapButton from './components/MapButton';
 import * as firebase from './utils/Firebase';
 
 let db = firebase.db;
